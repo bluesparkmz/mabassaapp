@@ -1,19 +1,20 @@
 import React, { useState } from "react";
 import { View, Text } from "react-native";
 import { Image } from "expo-image";
-import { colors } from "@/theme";
+import { ACCENT, ACCENT_DARK } from "@/theme";
 
-/** Fallback initials — só tons de verde (primary) */
-const AVATAR_GREENS = [
-  colors.primary,
-  colors.primaryDark,
-  "#22C55E",
-  "#10B981",
-  "#059669",
-];
+/** Fallback initials — tons de verde (referência Mabassa) */
+const AVATAR_GREENS = [ACCENT, ACCENT_DARK, "#22C55E", "#10B981", "#059669"];
 
-export default function MabassaAvatar({ uri, name, size = 44, borderRadius }) {
+function normalizeUri(uri) {
+  if (uri == null) return null;
+  const value = String(uri).trim();
+  return value.length > 0 ? value : null;
+}
+
+export default function MabassaAvatar({ uri, name, size = 44, borderRadius, style }) {
   const [error, setError] = useState(false);
+  const imageUri = normalizeUri(uri);
   const radius = borderRadius !== undefined ? borderRadius : size / 2;
   const initials = name
     ? name
@@ -27,21 +28,27 @@ export default function MabassaAvatar({ uri, name, size = 44, borderRadius }) {
   const colorIndex = name ? name.charCodeAt(0) % AVATAR_GREENS.length : 0;
   const bgColor = AVATAR_GREENS[colorIndex];
 
-  if (error || !uri) {
+  const baseStyle = {
+    width: size,
+    height: size,
+    borderRadius: radius,
+    overflow: "hidden",
+  };
+
+  if (error || !imageUri) {
     return (
       <View
-        style={{
-          width: size,
-          height: size,
-          borderRadius: radius,
-          backgroundColor: bgColor,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        style={[
+          baseStyle,
+          {
+            backgroundColor: bgColor,
+            alignItems: "center",
+            justifyContent: "center",
+          },
+          style,
+        ]}
       >
-        <Text
-          style={{ color: "#fff", fontWeight: "700", fontSize: size * 0.38 }}
-        >
+        <Text style={{ color: "#fff", fontWeight: "700", fontSize: size * 0.38 }}>
           {initials}
         </Text>
       </View>
@@ -50,8 +57,8 @@ export default function MabassaAvatar({ uri, name, size = 44, borderRadius }) {
 
   return (
     <Image
-      source={{ uri }}
-      style={{ width: size, height: size, borderRadius: radius }}
+      source={{ uri: imageUri }}
+      style={[baseStyle, style]}
       contentFit="cover"
       onError={() => setError(true)}
     />

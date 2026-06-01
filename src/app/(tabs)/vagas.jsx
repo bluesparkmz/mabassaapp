@@ -18,13 +18,16 @@ import MabassaAvatar from "@/components/MabassaAvatar";
 import FilterChips from "@/components/FilterChips";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
-
-const PURPLE = "#6C5DD3";
-const RED = "#FF5656";
-const TEXT_MAIN = "#11142D";
-const TEXT_SUB = "#808191";
-const BG = "#F8F9FA";
-const CARD = "#FFFFFF";
+import {
+  ACCENT,
+  ACCENT_DARK,
+  TEXT_MAIN,
+  TEXT_SUB,
+  BG_SOFT as BG,
+  CARD,
+  cardStyle,
+  shadow,
+} from "@/theme";
 
 const jobCategories = [
   "Todos",
@@ -53,15 +56,9 @@ function VagaCard({ vaga }) {
       onPress={openDetail}
       activeOpacity={0.92}
       style={{
-        backgroundColor: CARD,
-        borderRadius: 24,
+        ...cardStyle,
         padding: 24,
-        marginBottom: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 12,
-        elevation: 3,
+        ...shadow.card,
       }}
     >
       {/* Top row */}
@@ -131,7 +128,7 @@ function VagaCard({ vaga }) {
         }}
       >
         <View>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: RED }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: ACCENT_DARK }}>
             {vaga.salary}
           </Text>
           <Text style={{ fontSize: 12, color: TEXT_SUB, marginTop: 4 }}>
@@ -141,7 +138,7 @@ function VagaCard({ vaga }) {
         <TouchableOpacity
           onPress={openDetail}
           style={{
-            backgroundColor: PURPLE,
+            backgroundColor: ACCENT,
             paddingHorizontal: 24,
             paddingVertical: 12,
             borderRadius: 24,

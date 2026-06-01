@@ -15,14 +15,17 @@ import StarRating from "@/components/StarRating";
 import FilterChips from "@/components/FilterChips";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
-
-const PURPLE = "#6C5DD3";
-const RED = "#FF5656";
-const TEXT_MAIN = "#11142D";
-const TEXT_SUB = "#808191";
-const BG = "#F8F9FA";
-const CARD = "#FFFFFF";
-const BORDER = "#E2E8F0";
+import {
+  ACCENT,
+  ACCENT_DARK,
+  TEXT_MAIN,
+  TEXT_SUB,
+  BG_SOFT as BG,
+  CARD,
+  BORDER,
+  cardStyle,
+  shadow,
+} from "@/theme";
 const freelancerCategories = [
   "Todos",
   "Design",
@@ -45,15 +48,11 @@ function FreelancerCard({ freelancer, cardWidth }) {
       onPress={openProfile}
       activeOpacity={0.92}
       style={{
-        backgroundColor: CARD,
-        borderRadius: 24,
+        ...cardStyle,
         padding: 16,
         width: cardWidth,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 12,
-        elevation: 3,
+        marginBottom: 0,
+        ...shadow.card,
       }}
     >
       {/* Avatar + Status */}
@@ -74,7 +73,7 @@ function FreelancerCard({ freelancer, cardWidth }) {
                 width: 14,
                 height: 14,
                 borderRadius: 7,
-                backgroundColor: PURPLE,
+                backgroundColor: ACCENT,
                 borderWidth: 2,
                 borderColor: "#fff",
               }}
@@ -132,7 +131,7 @@ function FreelancerCard({ freelancer, cardWidth }) {
           marginBottom: 16,
         }}
       >
-        <CheckCircle size={14} color={PURPLE} />
+        <CheckCircle size={14} color={ACCENT} />
         <Text style={{ fontSize: 13, color: TEXT_SUB }}>
           {freelancer.completedJobs} trabalhos
         </Text>
@@ -143,7 +142,7 @@ function FreelancerCard({ freelancer, cardWidth }) {
         style={{
           fontSize: 16,
           fontWeight: "700",
-          color: RED,
+          color: ACCENT_DARK,
           textAlign: "center",
           marginBottom: 16,
         }}
@@ -155,7 +154,7 @@ function FreelancerCard({ freelancer, cardWidth }) {
       <TouchableOpacity
         onPress={openProfile}
         style={{
-          backgroundColor: freelancer.available ? PURPLE : "#E2E8F0",
+          backgroundColor: freelancer.available ? ACCENT : "#E2E8F0",
           paddingVertical: 12,
           borderRadius: 24,
           alignItems: "center",

@@ -14,14 +14,18 @@ import MabassaAvatar from "@/components/MabassaAvatar";
 import FilterChips from "@/components/FilterChips";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
-
-const PURPLE = "#6C5DD3";
-const RED = "#FF5656";
-const TEXT_MAIN = "#11142D";
-const TEXT_SUB = "#808191";
-const BG = "#F8F9FA";
-const CARD = "#FFFFFF";
-const BORDER = "#E2E8F0";
+import {
+  ACCENT,
+  ACCENT_DARK,
+  TEXT_MAIN,
+  TEXT_SUB,
+  BG_SOFT as BG,
+  CARD,
+  BORDER,
+  cardStyle,
+  shadow,
+  tagStyle,
+} from "@/theme";
 const categorias = [
   "Todos",
   "Tecnologia",
@@ -35,6 +39,7 @@ const categorias = [
 
 function EmpresaCard({ empresa }) {
   const router = useRouter();
+  const tag = tagStyle();
   const openProfile = () => {
     router.push({ pathname: "/public-profile", params: { kind: "empresa", id: empresa.id } });
   };
@@ -44,15 +49,9 @@ function EmpresaCard({ empresa }) {
       onPress={openProfile}
       activeOpacity={0.92}
       style={{
-        backgroundColor: CARD,
-        borderRadius: 24,
+        ...cardStyle,
         padding: 24,
-        marginBottom: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 12,
-        elevation: 3,
+        ...shadow.card,
       }}
     >
       <View
@@ -78,13 +77,13 @@ function EmpresaCard({ empresa }) {
           >
             <View
               style={{
-                backgroundColor: PURPLE + "18",
+                backgroundColor: tag.bg,
                 paddingHorizontal: 10,
                 paddingVertical: 4,
                 borderRadius: 20,
               }}
             >
-              <Text style={{ fontSize: 12, fontWeight: "600", color: PURPLE }}>
+              <Text style={{ fontSize: 12, fontWeight: "600", color: tag.text }}>
                 {empresa.area}
               </Text>
             </View>
@@ -127,8 +126,8 @@ function EmpresaCard({ empresa }) {
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Briefcase size={16} color={PURPLE} />
-          <Text style={{ fontSize: 14, fontWeight: "600", color: PURPLE }}>
+          <Briefcase size={16} color={ACCENT} />
+          <Text style={{ fontSize: 14, fontWeight: "600", color: ACCENT_DARK }}>
             {empresa.openJobs} vagas abertas
           </Text>
         </View>
@@ -138,7 +137,7 @@ function EmpresaCard({ empresa }) {
             flexDirection: "row",
             alignItems: "center",
             gap: 4,
-            backgroundColor: PURPLE,
+            backgroundColor: ACCENT,
             paddingHorizontal: 20,
             paddingVertical: 12,
             borderRadius: 24,

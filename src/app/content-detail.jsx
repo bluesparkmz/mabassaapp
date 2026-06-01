@@ -23,14 +23,15 @@ import MabassaAvatar from "@/components/MabassaAvatar";
 import { mabassaApi } from "@/utils/api";
 import { useAuth } from "@/utils/auth/useAuth";
 import { logError } from "@/utils/logger";
-
-const PURPLE = "#6C5DD3";
-const RED = "#FF5656";
-const BG = "#F8F9FA";
-const CARD = "#FFFFFF";
-const BORDER = "#E2E8F0";
-const TEXT_MAIN = "#11142D";
-const TEXT_SUB = "#808191";
+import {
+  ACCENT,
+  ACCENT_DARK,
+  TEXT_MAIN,
+  TEXT_SUB,
+  BG_SOFT as BG,
+  CARD,
+  BORDER,
+} from "@/theme";
 
 const jobTypeLabels = {
   full_time: "Full-time",
@@ -111,7 +112,7 @@ function normalize(type, item) {
     const company = item.company_user?.company_profile;
     const tags = item.tags || (item.requirements || "").split(",").map((tag) => tag.trim()).filter(Boolean);
     return {
-      accent: PURPLE,
+      accent: ACCENT,
       icon: Briefcase,
       label: "Vaga",
       title: item.title,
@@ -137,7 +138,7 @@ function normalize(type, item) {
     const owner = item.owner_user || {};
     const freelancer = owner.freelancer_profile;
     return {
-      accent: PURPLE,
+      accent: ACCENT,
       icon: Sparkles,
       label: "Servico",
       title: item.title,
@@ -160,7 +161,7 @@ function normalize(type, item) {
   }
 
   return {
-    accent: PURPLE,
+    accent: ACCENT,
     icon: Send,
     label: "Post",
     title: null,
@@ -293,7 +294,7 @@ export default function ContentDetailScreen() {
 
       {showLoader ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator color={PURPLE} />
+          <ActivityIndicator color={ACCENT} />
         </View>
       ) : error && !detail ? (
         <View style={{ padding: 16 }}>
@@ -413,7 +414,7 @@ export default function ContentDetailScreen() {
                 borderTopColor: BORDER
               }}>
                 <View>
-                  <Text style={{ color: RED, fontSize: 18, fontWeight: "700" }}>
+                  <Text style={{ color: ACCENT_DARK, fontSize: 18, fontWeight: "700" }}>
                     {salaryLabel(data) || "A negociar"}
                   </Text>
                   <Text style={{ color: TEXT_SUB, fontSize: 12, marginTop: 2 }}>
@@ -428,7 +429,7 @@ export default function ContentDetailScreen() {
                     minHeight: 50,
                     paddingHorizontal: 32,
                     borderRadius: 25,
-                    backgroundColor: PURPLE,
+                    backgroundColor: ACCENT,
                     alignItems: "center",
                     justifyContent: "center",
                     flexDirection: "row",
@@ -444,8 +445,8 @@ export default function ContentDetailScreen() {
             )}
             {message && (
               <View style={{ padding: 16, flexDirection: "row", alignItems: "center", gap: 7, justifyContent: "center" }}>
-                <CheckCircle size={15} color={message.includes("enviad") ? PURPLE : "#DC2626"} />
-                <Text style={{ color: message.includes("enviad") ? PURPLE : "#DC2626", fontSize: 13, fontWeight: "800" }}>
+                <CheckCircle size={15} color={message.includes("enviad") ? ACCENT : "#DC2626"} />
+                <Text style={{ color: message.includes("enviad") ? ACCENT_DARK : "#DC2626", fontSize: 13, fontWeight: "800" }}>
                   {message}
                 </Text>
               </View>

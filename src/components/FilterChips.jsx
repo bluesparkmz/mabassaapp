@@ -1,6 +1,6 @@
 import React from "react";
 import { ScrollView, TouchableOpacity, Text } from "react-native";
-import { colors } from "@/theme/mabassaTheme";
+import { colors } from "@/theme";
 
 export default function FilterChips({ options, selected, onSelect, style, contentPadding = 20 }) {
   return (
