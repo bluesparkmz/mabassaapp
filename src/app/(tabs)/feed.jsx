@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   Animated,
 } from "react-native";
 import { Image } from "expo-image";
@@ -12,35 +11,35 @@ import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  Bell,
-  Search,
-  Briefcase,
-  Star,
-  Building2,
-  MapPin,
-  Clock,
-  ChevronRight,
   Heart,
   MessageCircle,
   Share2,
-  X,
-  Zap,
+  MapPin,
+  Clock,
   Users,
+  DollarSign,
+  Briefcase,
 } from "lucide-react-native";
 import MabassaAvatar from "@/components/MabassaAvatar";
 import SkeletonCard from "@/components/SkeletonCard";
+import HomeHeader from "@/components/HomeHeader";
+import FeedPromoBanner from "@/components/FeedPromoBanner";
+import FilterChips from "@/components/FilterChips";
+import { useUser } from "@/utils/auth/useUser";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
+import {
+  ACCENT,
+  BLACK,
+  TEXT_MAIN,
+  TEXT_SUB,
+  TEXT_MUTED,
+  BG,
+  BORDER,
+  feedCardStyle,
+  jobTypeBadgeStyle,
+} from "@/theme";
 
-const BLUE = "#2563EB";
-const GREEN = "#10B981";
-const PURPLE = "#6C5DD3";
-const RED = "#FF5656";
-const TEXT_MAIN = "#11142D";
-const TEXT_SUB = "#808191";
-const BG = "#F8F9FA";
-const CARD = "#FFFFFF";
-const BORDER = "#E2E8F0";
 const feedTypes = ["Todos", "Posts", "Vagas", "Serviços", "Empresas"];
 
 function openPublicProfile(router, item) {
@@ -58,64 +57,128 @@ function openContentDetail(router, item) {
   });
 }
 
-// ── Badge ──────────────────────────────────────────────────────────
-function Badge({ label, color }) {
+function parseSkills(item) {
+  if (Array.isArray(item.skills)) return item.skills.filter(Boolean);
+  if (typeof item.skills === "string" && item.skills.trim()) {
+    return item.skills.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  if (Array.isArray(item.tags)) return item.tags;
+  return [];
+}
+
+function TypeBadge({ label, color = ACCENT }) {
   return (
     <View
       style={{
         backgroundColor: color + "18",
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: 20,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 8,
       }}
     >
-      <Text
-        style={{ fontSize: 10, fontWeight: "800", color, letterSpacing: 0.3 }}
-      >
-        {label.toUpperCase()}
+      <Text style={{ fontSize: 11, fontWeight: "700", color }}>{label}</Text>
+    </View>
+  );
+}
+
+function JobTypeBadge({ jobType }) {
+  if (!jobType) return null;
+  const { bg, color } = jobTypeBadgeStyle(jobType);
+  return (
+    <View style={{ backgroundColor: bg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+      <Text style={{ fontSize: 11, fontWeight: "600", color }}>{jobType}</Text>
+    </View>
+  );
+}
+
+function DetailRow({ icon: Icon, text }) {
+  if (!text) return null;
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 }}>
+      <Icon size={15} color={TEXT_MUTED} strokeWidth={2} />
+      <Text style={{ fontSize: 13, color: TEXT_SUB, flex: 1 }} numberOfLines={2}>
+        {text}
       </Text>
     </View>
   );
 }
 
-// ── Filter pill ────────────────────────────────────────────────────
-function FilterPill({ label, active, onPress }) {
+function SkillTags({ skills }) {
+  if (!skills.length) return null;
+  const visible = skills.slice(0, 3);
+  const rest = skills.length - 3;
+  return (
+    <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 10 }}>
+      {visible.map((skill) => (
+        <View
+          key={skill}
+          style={{
+            paddingHorizontal: 10,
+            paddingVertical: 5,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: BORDER,
+          }}
+        >
+          <Text style={{ fontSize: 11, color: TEXT_SUB, fontWeight: "500" }}>{skill}</Text>
+        </View>
+      ))}
+      {rest > 0 && (
+        <Text style={{ fontSize: 11, color: TEXT_MUTED, fontWeight: "500" }}>+ {rest} mais</Text>
+      )}
+    </View>
+  );
+}
+
+function CardFooter({ left, right }) {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginTop: 14,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: BORDER,
+      }}
+    >
+      {left ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <Clock size={13} color={TEXT_MUTED} />
+          <Text style={{ fontSize: 12, color: TEXT_MUTED }}>{left}</Text>
+        </View>
+      ) : (
+        <View />
+      )}
+      {right != null && (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <Users size={13} color={TEXT_MUTED} />
+          <Text style={{ fontSize: 12, color: TEXT_MUTED, fontWeight: "600" }}>{right}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+function PrimaryButton({ label, onPress }) {
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.75}
+      activeOpacity={0.85}
       style={{
+        backgroundColor: BLACK,
         paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 24,
-        backgroundColor: CARD,
-        borderWidth: 1,
-        borderColor: active ? PURPLE : BORDER,
-        alignItems: "center",
-        justifyContent: "center",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: active ? 0.1 : 0.02,
-        shadowRadius: 6,
-        elevation: active ? 2 : 1,
-        flexShrink: 1,
+        paddingVertical: 11,
+        borderRadius: 22,
       }}
     >
-      <Text
-        style={{
-          fontSize: 14,
-          fontWeight: active ? "600" : "500",
-          color: active ? PURPLE : "#11142D",
-          letterSpacing: 0.2,
-        }}
-      >
-        {label}
-      </Text>
+      <Text style={{ color: "#fff", fontWeight: "600", fontSize: 13 }}>{label}</Text>
     </TouchableOpacity>
   );
 }
 
-// ── POST card (estilo Instagram/LinkedIn) ─────────────────────────
+// ── POST card ─────────────────────────────────────────────────────
 function PostCard({ item }) {
   const router = useRouter();
   const [liked, setLiked] = useState(false);
@@ -124,74 +187,48 @@ function PostCard({ item }) {
 
   const handleLike = () => {
     Animated.sequence([
-      Animated.timing(scale, {
-        toValue: 1.3,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scale, {
-        toValue: 1,
-        duration: 120,
-        useNativeDriver: true,
-      }),
+      Animated.timing(scale, { toValue: 1.25, duration: 100, useNativeDriver: true }),
+      Animated.timing(scale, { toValue: 1, duration: 100, useNativeDriver: true }),
     ]).start();
     setLiked((v) => !v);
     setLikesCount((c) => (liked ? c - 1 : c + 1));
   };
 
   return (
-    <TouchableOpacity onPress={() => openContentDetail(router, item)} activeOpacity={0.92} style={cardStyle}>
-      {/* Author */}
+    <TouchableOpacity
+      onPress={() => openContentDetail(router, item)}
+      activeOpacity={0.92}
+      style={feedCardStyle}
+    >
       <TouchableOpacity
         onPress={() => openPublicProfile(router, item)}
         activeOpacity={0.8}
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}
       >
-        <MabassaAvatar uri={item.avatar} name={item.author} size={48} borderRadius={24} />
-        <View style={{ flex: 1, marginLeft: 16 }}>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: TEXT_MAIN }}>
-            {item.author}
-          </Text>
-          <Text style={{ fontSize: 13, color: TEXT_SUB, marginTop: 1 }}>
-            {item.role}
-          </Text>
+        <MabassaAvatar uri={item.avatar} name={item.author} size={44} borderRadius={22} />
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: TEXT_MAIN }}>{item.author}</Text>
+          {!!item.role && (
+            <Text style={{ fontSize: 12, color: TEXT_SUB, marginTop: 2 }}>{item.role}</Text>
+          )}
         </View>
+        <TypeBadge label="Post" color={ACCENT} />
       </TouchableOpacity>
 
-      {/* Content */}
       {!!item.content && (
-        <Text
-          style={{
-            fontSize: 15,
-            color: TEXT_MAIN,
-            lineHeight: 22,
-            marginBottom: 16,
-          }}
-        >
+        <Text style={{ fontSize: 14, color: TEXT_MAIN, lineHeight: 21, marginBottom: 12 }}>
           {item.content}
         </Text>
       )}
 
-      {/* Image */}
       {item.image && (
         <Image
           source={{ uri: item.image }}
-          style={{
-            width: "100%",
-            height: 220,
-            borderRadius: 16,
-            marginBottom: 16,
-          }}
+          style={{ width: "100%", height: 200, borderRadius: 12, marginBottom: 12 }}
           contentFit="cover"
         />
       )}
 
-      {/* Divider */}
-      <View
-        style={{ height: 1, backgroundColor: BORDER, marginBottom: 16 }}
-      />
-
-      {/* Actions */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 20 }}>
         <TouchableOpacity
           onPress={handleLike}
@@ -201,64 +238,42 @@ function PostCard({ item }) {
           <Animated.View style={{ transform: [{ scale }] }}>
             <Heart
               size={18}
-              color={liked ? "#EF4444" : "#94A3B8"}
+              color={liked ? "#EF4444" : TEXT_MUTED}
               fill={liked ? "#EF4444" : "transparent"}
             />
           </Animated.View>
-          <Text style={{ fontSize: 13, color: TEXT_SUB, fontWeight: "600" }}>
-            {likesCount}
-          </Text>
+          <Text style={{ fontSize: 13, color: TEXT_SUB, fontWeight: "500" }}>{likesCount}</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
-          activeOpacity={0.7}
-        >
-          <MessageCircle size={18} color={TEXT_SUB} />
-          <Text style={{ fontSize: 13, color: TEXT_SUB, fontWeight: "600" }}>
-            {item.comments}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
-          activeOpacity={0.7}
-        >
-          <Share2 size={18} color={TEXT_SUB} />
-          <Text style={{ fontSize: 13, color: TEXT_SUB, fontWeight: "600" }}>
-            Partilhar
-          </Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+          <MessageCircle size={18} color={TEXT_MUTED} />
+          <Text style={{ fontSize: 13, color: TEXT_SUB, fontWeight: "500" }}>{item.comments}</Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+          <Share2 size={18} color={TEXT_MUTED} />
+          <Text style={{ fontSize: 13, color: TEXT_SUB, fontWeight: "500" }}>Partilhar</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
 }
 
-// ── VAGA card ─────────────────────────────────────────────────────
+// ── VAGA card (estilo job list) ───────────────────────────────────
 function VagaCard({ item }) {
   const router = useRouter();
+  const skills = parseSkills(item);
+
   return (
-    <TouchableOpacity onPress={() => openContentDetail(router, item)} activeOpacity={0.92} style={cardStyle}>
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
-        <TouchableOpacity
-          onPress={() => openPublicProfile(router, item)}
-          activeOpacity={0.8}
-        >
-          <MabassaAvatar
-            uri={item.avatar}
-            name={item.company}
-            size={48}
-            borderRadius={24}
-          />
+    <TouchableOpacity
+      onPress={() => openContentDetail(router, item)}
+      activeOpacity={0.92}
+      style={feedCardStyle}
+    >
+      <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
+        <TouchableOpacity onPress={() => openPublicProfile(router, item)} activeOpacity={0.8}>
+          <MabassaAvatar uri={item.avatar} name={item.company} size={48} borderRadius={24} />
         </TouchableOpacity>
-        <View style={{ flex: 1, marginLeft: 16 }}>
-          <Text
-            style={{
-              fontSize: 17,
-              fontWeight: "800",
-              color: TEXT_MAIN,
-              lineHeight: 23,
-            }}
-            numberOfLines={2}
-          >
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: TEXT_MAIN, lineHeight: 22 }} numberOfLines={2}>
             {item.title}
           </Text>
           {!!item.company && (
@@ -269,66 +284,27 @@ function VagaCard({ item }) {
         </View>
       </View>
 
-      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-        <Badge label="Vaga" color={PURPLE} />
-        {!!item.jobType && (
-          <View style={{ backgroundColor: PURPLE + "12", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
-            <Text style={{ fontSize: 12, fontWeight: "700", color: PURPLE }}>{item.jobType}</Text>
-          </View>
-        )}
-        {!!item.postedAt && (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Clock size={12} color={TEXT_SUB} />
-            <Text style={{ fontSize: 12, color: TEXT_SUB }}>{item.postedAt}</Text>
-          </View>
-        )}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+        <TypeBadge label="Vaga" color="#2563EB" />
+        <JobTypeBadge jobType={item.jobType} />
       </View>
 
-      {(item.location || item.description) && (
-        <View style={{ marginBottom: 14 }}>
-          {!!item.location && (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: item.description ? 8 : 0 }}>
-              <MapPin size={14} color={TEXT_SUB} />
-              <Text style={{ fontSize: 13, color: TEXT_SUB }} numberOfLines={1}>
-                {item.location}
-              </Text>
-            </View>
-          )}
-          {!!item.description && (
-            <Text style={{ fontSize: 14, color: TEXT_SUB, lineHeight: 20 }} numberOfLines={2}>
-              {item.description}
-            </Text>
-          )}
-        </View>
+      <DetailRow icon={DollarSign} text={item.salary ? `${item.salary}` : null} />
+      <DetailRow icon={Briefcase} text={item.experience || item.category} />
+      <DetailRow icon={MapPin} text={item.location} />
+
+      {!!item.description && (
+        <Text style={{ fontSize: 13, color: TEXT_SUB, lineHeight: 19, marginTop: 4 }} numberOfLines={2}>
+          {item.description}
+        </Text>
       )}
 
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <View>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: RED }}>
-            {item.salary || "A negociar"}
-          </Text>
-          <Text style={{ fontSize: 12, color: TEXT_SUB, marginTop: 4 }}>Salário</Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => openContentDetail(router, item)}
-          style={{
-            backgroundColor: PURPLE,
-            paddingHorizontal: 24,
-            paddingVertical: 12,
-            borderRadius: 24,
-          }}
-          activeOpacity={0.8}
-        >
-          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
-            Candidatar-se
-          </Text>
-        </TouchableOpacity>
+      <SkillTags skills={skills} />
+
+      <CardFooter left={item.postedAt} right={item.applicants} />
+
+      <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 12 }}>
+        <PrimaryButton label="Candidatar-se" onPress={() => openContentDetail(router, item)} />
       </View>
     </TouchableOpacity>
   );
@@ -337,17 +313,20 @@ function VagaCard({ item }) {
 // ── SERVIÇO card ──────────────────────────────────────────────────
 function ServicoCard({ item }) {
   const router = useRouter();
+  const skills = parseSkills(item);
+
   return (
-    <TouchableOpacity onPress={() => openContentDetail(router, item)} activeOpacity={0.92} style={cardStyle}>
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
-        <TouchableOpacity
-          onPress={() => openPublicProfile(router, item)}
-          activeOpacity={0.8}
-        >
+    <TouchableOpacity
+      onPress={() => openContentDetail(router, item)}
+      activeOpacity={0.92}
+      style={feedCardStyle}
+    >
+      <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
+        <TouchableOpacity onPress={() => openPublicProfile(router, item)} activeOpacity={0.8}>
           <MabassaAvatar uri={item.avatar} name={item.company} size={48} borderRadius={24} />
         </TouchableOpacity>
-        <View style={{ flex: 1, marginLeft: 16 }}>
-          <Text style={{ fontSize: 17, fontWeight: "800", color: TEXT_MAIN, lineHeight: 23 }} numberOfLines={2}>
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: TEXT_MAIN, lineHeight: 22 }} numberOfLines={2}>
             {item.title}
           </Text>
           {!!item.company && (
@@ -358,63 +337,32 @@ function ServicoCard({ item }) {
         </View>
       </View>
 
-      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-        <Badge label="Serviço" color={PURPLE} />
-        {!!item.postedAt && (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Clock size={12} color={TEXT_SUB} />
-            <Text style={{ fontSize: 12, color: TEXT_SUB }}>{item.postedAt}</Text>
-          </View>
-        )}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+        <TypeBadge label="Serviço" color={ACCENT} />
       </View>
 
-      {/* Image */}
       {item.image && (
-        <View
-          style={{
-            width: "100%",
-            height: 160,
-            borderRadius: 16,
-            overflow: "hidden",
-            marginBottom: 14,
-            backgroundColor: "#F1F5F9",
-          }}
-        >
-          <Image
-            source={{ uri: item.image }}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-          />
-        </View>
+        <Image
+          source={{ uri: item.image }}
+          style={{ width: "100%", height: 150, borderRadius: 12, marginBottom: 12, backgroundColor: "#F3F4F6" }}
+          contentFit="cover"
+        />
       )}
 
+      <DetailRow icon={DollarSign} text={item.price || null} />
+      <DetailRow icon={MapPin} text={item.location} />
+
       {!!item.description && (
-        <Text style={{ fontSize: 14, color: TEXT_SUB, lineHeight: 20, marginBottom: 14 }} numberOfLines={2}>
+        <Text style={{ fontSize: 13, color: TEXT_SUB, lineHeight: 19 }} numberOfLines={2}>
           {item.description}
         </Text>
       )}
 
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <View>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: RED }}>
-            {item.price || "A negociar"}
-          </Text>
-          <Text style={{ fontSize: 12, color: TEXT_SUB, marginTop: 4 }}>Preço</Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => openContentDetail(router, item)}
-          style={{
-            backgroundColor: PURPLE,
-            paddingHorizontal: 24,
-            paddingVertical: 12,
-            borderRadius: 24,
-          }}
-          activeOpacity={0.8}
-        >
-          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
-            Contratar
-          </Text>
-        </TouchableOpacity>
+      <SkillTags skills={skills} />
+      <CardFooter left={item.postedAt} />
+
+      <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 12 }}>
+        <PrimaryButton label="Contratar" onPress={() => openContentDetail(router, item)} />
       </View>
     </TouchableOpacity>
   );
@@ -423,147 +371,40 @@ function ServicoCard({ item }) {
 // ── EMPRESA card ──────────────────────────────────────────────────
 function EmpresaCard({ item }) {
   const router = useRouter();
+
   return (
-    <View style={cardStyle}>
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
-        <TouchableOpacity
-          onPress={() => openPublicProfile(router, item)}
-          activeOpacity={0.8}
-        >
-          <MabassaAvatar
-            uri={item.avatar}
-            name={item.company}
-            size={48}
-            borderRadius={24}
-          />
+    <View style={feedCardStyle}>
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+        <TouchableOpacity onPress={() => openPublicProfile(router, item)} activeOpacity={0.8}>
+          <MabassaAvatar uri={item.avatar} name={item.company} size={48} borderRadius={24} />
         </TouchableOpacity>
-        <View style={{ flex: 1, marginLeft: 16 }}>
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: "700",
-              color: TEXT_MAIN,
-              lineHeight: 22,
-            }}
-            numberOfLines={2}
-          >
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: TEXT_MAIN }} numberOfLines={2}>
             {item.company}
           </Text>
+          <View style={{ marginTop: 8, alignSelf: "flex-start" }}>
+            <TypeBadge label="Empresa" color="#7C3AED" />
+          </View>
         </View>
       </View>
 
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-        <Text style={{ fontSize: 13, color: TEXT_SUB }}>
-          Posted in <Text style={{ fontWeight: "700", color: TEXT_MAIN }}>Empresas</Text>
-        </Text>
-        <Text style={{ fontSize: 13, color: TEXT_SUB }}>
-          {item.postedAt}
-        </Text>
-      </View>
-
-      <Text
-        style={{
-          fontSize: 16,
-          fontWeight: "700",
-          color: TEXT_MAIN,
-          marginBottom: 6,
-        }}
-      >
-        {item.title}
-      </Text>
-      <Text
-        style={{
-          fontSize: 14,
-          color: TEXT_SUB,
-          lineHeight: 20,
-          marginBottom: 20,
-        }}
-        numberOfLines={3}
-      >
+      <Text style={{ fontSize: 15, fontWeight: "600", color: TEXT_MAIN, marginBottom: 6 }}>{item.title}</Text>
+      <Text style={{ fontSize: 13, color: TEXT_SUB, lineHeight: 19, marginBottom: 12 }} numberOfLines={3}>
         {item.description}
       </Text>
 
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <View style={{ flexDirection: "row", gap: 14 }}>
-          {item.location && (
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-            >
-              <MapPin size={14} color={TEXT_SUB} />
-              <Text style={{ fontSize: 13, color: TEXT_SUB }}>
-                {item.location}
-              </Text>
-            </View>
-          )}
-          {item.employees && (
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-            >
-              <Users size={14} color={TEXT_SUB} />
-              <Text style={{ fontSize: 13, color: TEXT_SUB }}>
-                {item.employees} pessoas
-              </Text>
-            </View>
-          )}
-        </View>
-        <TouchableOpacity
-          onPress={() => openPublicProfile(router, item)}
-          style={{
-            backgroundColor: PURPLE,
-            paddingHorizontal: 24,
-            paddingVertical: 12,
-            borderRadius: 24,
-          }}
-          activeOpacity={0.8}
-        >
-          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
-            Ver Perfil
-          </Text>
-        </TouchableOpacity>
+      <DetailRow icon={MapPin} text={item.location} />
+      {item.employees && <DetailRow icon={Users} text={`${item.employees} colaboradores`} />}
+
+      <CardFooter left={item.postedAt} />
+
+      <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 12 }}>
+        <PrimaryButton label="Ver perfil" onPress={() => openPublicProfile(router, item)} />
       </View>
     </View>
   );
 }
 
-// ── Shared styles ─────────────────────────────────────────────────
-const cardStyle = {
-  backgroundColor: CARD,
-  borderRadius: 24,
-  padding: 24,
-  marginBottom: 16,
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.05,
-  shadowRadius: 12,
-  elevation: 3,
-};
-const btnPrimary = {
-  backgroundColor: PURPLE,
-  paddingVertical: 12,
-  paddingHorizontal: 24,
-  borderRadius: 24,
-  alignItems: "center",
-  justifyContent: "center",
-};
-const btnPrimaryText = { color: "#fff", fontWeight: "700", fontSize: 13 };
-const btnSecondary = {
-  paddingVertical: 12,
-  paddingHorizontal: 24,
-  borderRadius: 24,
-  alignItems: "center",
-  justifyContent: "center",
-  backgroundColor: CARD,
-  borderWidth: 1,
-  borderColor: BORDER,
-};
-
-// ── Render by type ────────────────────────────────────────────────
 function FeedCard({ item }) {
   if (item.type === "post") return <PostCard item={item} />;
   if (item.type === "vaga") return <VagaCard item={item} />;
@@ -579,10 +420,10 @@ const TYPE_MAP = {
   Empresas: "empresa",
 };
 
-// ── Main screen ───────────────────────────────────────────────────
 export default function FeedScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { user } = useUser();
   const [searchText, setSearchText] = useState("");
   const [activeFilter, setActiveFilter] = useState("Todos");
   const {
@@ -612,99 +453,36 @@ export default function FeedScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: BG }}>
-      {/* Header fixo apenas com logo e notificações */}
-      <View
-        style={{
-          backgroundColor: CARD,
-          paddingTop: insets.top + 12,
-          paddingHorizontal: 20,
-          paddingBottom: 14,
-          borderBottomWidth: 1,
-          borderBottomColor: BORDER,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: PURPLE, alignItems: "center", justifyContent: "center" }}>
-              <Briefcase size={20} color="#fff" />
-            </View>
-            <View>
-              <Text style={{ fontSize: 12, color: TEXT_SUB, fontWeight: "600" }}>Mabassa</Text>
-              <Text style={{ fontSize: 20, color: TEXT_MAIN, fontWeight: "900", marginTop: 2 }}>
-                Explorar
-              </Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            onPress={() => router.push("/notifications")}
-            activeOpacity={0.8}
-            style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: BG, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: BORDER }}
-          >
-            <Bell size={20} color={TEXT_MAIN} />
-            <View style={{ position: "absolute", top: 10, right: 12, width: 8, height: 8, borderRadius: 4, backgroundColor: RED }} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* ── Feed list com busca e filtros dentro do scroll ── */}
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          paddingBottom: insets.bottom + 88,
-        }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Barra de busca - agora dentro do scroll */}
-        <View style={{ paddingHorizontal: 20, marginTop: 14 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#FFFFFF", borderRadius: 18, borderWidth: 1, borderColor: BORDER, paddingHorizontal: 14, minHeight: 52, gap: 10 }}>
-            <Search size={18} color={TEXT_SUB} />
-            <TextInput
-              value={searchText}
-              onChangeText={setSearchText}
-              placeholder="Pesquisar vagas, posts e serviços..."
-              placeholderTextColor={TEXT_SUB}
-              style={{ flex: 1, fontSize: 15, color: TEXT_MAIN, fontWeight: "500" }}
-            />
-            {!!searchText && (
-              <TouchableOpacity
-                onPress={() => setSearchText("")}
-                activeOpacity={0.7}
-                style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#E2E8F0", alignItems: "center", justifyContent: "center" }}
-              >
-                <X size={16} color="#475569" strokeWidth={2.5} />
-              </TouchableOpacity>
-            )}
-          </View>
+        <HomeHeader
+          paddingTop={insets.top + 8}
+          userName={user?.name}
+          userAvatar={user?.avatar_url}
+          searchText={searchText}
+          onSearchChange={setSearchText}
+          onAvatarPress={() => router.push("/(tabs)/perfil")}
+        />
+
+        <View style={{ marginTop: 12 }}>
+          <FilterChips
+            options={feedTypes}
+            selected={activeFilter}
+            onSelect={setActiveFilter}
+            showFilterIcon
+          />
         </View>
 
-        {/* Filtros (categorias) - agora dentro do scroll */}
-        <ScrollView
-          horizontal
-          keyboardShouldPersistTaps="handled"
-          showsHorizontalScrollIndicator={false}
-          style={{ flexGrow: 0, flexShrink: 0, height: 60, minHeight: 60, maxHeight: 60, backgroundColor: BG }}
-          contentContainerStyle={{
-            paddingHorizontal: 24,
-            paddingTop: 10,
-            paddingBottom: 10,
-            alignItems: "center",
-            minHeight: 60,
-            gap: 8,
-          }}
-        >
-          {feedTypes.map((t) => (
-            <FilterPill
-              key={t}
-              label={t}
-              active={activeFilter === t}
-              onPress={() => setActiveFilter(t)}
-            />
-          ))}
-        </ScrollView>
+        <FeedPromoBanner onPress={() => setActiveFilter("Vagas")} />
 
-        <View style={{ paddingHorizontal: 20, paddingTop: 0, paddingBottom: 10 }}>
-          <Text style={{ fontSize: 16, fontWeight: "800", color: TEXT_MAIN }}>Resultados</Text>
-          <Text style={{ fontSize: 13, color: TEXT_SUB, marginTop: 2 }}>{filtered.length} item{filtered.length !== 1 ? "s" : ""}</Text>
+        <View style={{ paddingHorizontal: 20, marginTop: 20, marginBottom: 12 }}>
+          <Text style={{ fontSize: 18, fontWeight: "700", color: TEXT_MAIN }}>Para si</Text>
+          <Text style={{ fontSize: 13, color: TEXT_SUB, marginTop: 4 }}>
+            {loading ? "A carregar..." : `${filtered.length} resultado${filtered.length !== 1 ? "s" : ""}`}
+          </Text>
         </View>
 
         <View style={{ paddingHorizontal: 20 }}>
@@ -713,26 +491,23 @@ export default function FeedScreen() {
             : filtered.map((item) => <FeedCard key={item.id} item={item} />)}
 
           {!loading && error && (
-            <View style={{ alignItems: "center", paddingTop: 60, gap: 12 }}>
-              <Text style={{ fontSize: 16, fontWeight: "700", color: "#94A3B8" }}>
-                Nao foi possivel carregar o feed
+            <View style={{ alignItems: "center", paddingTop: 48, gap: 8 }}>
+              <Text style={{ fontSize: 16, fontWeight: "600", color: TEXT_SUB }}>
+                Não foi possível carregar o feed
               </Text>
-              <Text style={{ fontSize: 13, color: "#CBD5E1", textAlign: "center" }}>
-                Veja o console do Expo para detalhes.
+              <Text style={{ fontSize: 13, color: TEXT_MUTED, textAlign: "center" }}>
+                Verifique a ligação e tente novamente.
               </Text>
             </View>
           )}
 
           {!loading && !error && filtered.length === 0 && (
-            <View style={{ alignItems: "center", paddingTop: 60, gap: 12 }}>
-              <Search size={48} color="#CBD5E1" />
-              <Text style={{ fontSize: 16, fontWeight: "700", color: "#94A3B8" }}>
+            <View style={{ alignItems: "center", paddingTop: 48, gap: 8 }}>
+              <Text style={{ fontSize: 16, fontWeight: "600", color: TEXT_SUB }}>
                 Nenhum resultado
               </Text>
-              <Text
-                style={{ fontSize: 13, color: "#CBD5E1", textAlign: "center" }}
-              >
-                Tenta outro filtro ou pesquisa
+              <Text style={{ fontSize: 13, color: TEXT_MUTED, textAlign: "center" }}>
+                Experimente outro filtro ou pesquisa
               </Text>
             </View>
           )}

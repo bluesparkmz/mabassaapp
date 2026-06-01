@@ -1,6 +1,16 @@
 import React, { useState } from "react";
 import { View, Text } from "react-native";
 import { Image } from "expo-image";
+import { colors } from "@/theme";
+
+/** Fallback initials — só tons de verde (primary) */
+const AVATAR_GREENS = [
+  colors.primary,
+  colors.primaryDark,
+  "#22C55E",
+  "#10B981",
+  "#059669",
+];
 
 export default function MabassaAvatar({ uri, name, size = 44, borderRadius }) {
   const [error, setError] = useState(false);
@@ -14,9 +24,8 @@ export default function MabassaAvatar({ uri, name, size = 44, borderRadius }) {
         .toUpperCase()
     : "?";
 
-  const bgColors = ["#2563EB", "#10B981", "#8B5CF6", "#F59E0B", "#EF4444"];
-  const colorIndex = name ? name.charCodeAt(0) % bgColors.length : 0;
-  const bgColor = bgColors[colorIndex];
+  const colorIndex = name ? name.charCodeAt(0) % AVATAR_GREENS.length : 0;
+  const bgColor = AVATAR_GREENS[colorIndex];
 
   if (error || !uri) {
     return (
