@@ -1,5 +1,12 @@
 ﻿import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Keyboard } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Keyboard,
+} from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,46 +28,43 @@ import { getDefaultDistrict } from "@/data/mozambiqueLocationsData";
 import { authApi, mabassaApi } from "@/utils/api";
 import { useAuth } from "@/utils/auth/useAuth";
 import { logError } from "@/utils/logger";
+import {
+  ACCENT,
+  ACCENT_DARK,
+  ACCENT_LIGHT,
+  BG,
+  BG_SOFT,
+  BORDER,
+  TEXT_MAIN,
+  TEXT_SUB,
+  TEXT_MUTED,
+  cardStyle,
+  colors,
+  radius,
+  tagStyle,
+} from "@/theme";
 
-const BLUE = "#2563EB";
-const GREEN = "#10B981";
-const BG = "#F8FAFC";
+const DEFAULT_PROVINCE = "Cidade de Maputo";
+
 const inputStyle = {
-  backgroundColor: "#fff",
+  backgroundColor: BG,
   borderWidth: 1,
-  borderColor: "#E2E8F0",
-  borderRadius: 14,
+  borderColor: BORDER,
+  borderRadius: radius.md,
   paddingHorizontal: 16,
   paddingVertical: 15,
   fontSize: 14,
-  color: "#0F172A",
+  color: TEXT_MAIN,
   minHeight: 54,
 };
-const loginButton = {
-  backgroundColor: BLUE,
-  borderRadius: 14,
-  paddingVertical: 16,
-  minHeight: 54,
-  alignItems: "center",
-  justifyContent: "center",
-};
-const DEFAULT_PROVINCE = "Cidade de Maputo";
-
 
 function StatBox({ value, label }) {
   return (
     <View style={{ alignItems: "center", flex: 1 }}>
-      <Text style={{ fontSize: 22, fontWeight: "800", color: "#0F172A" }}>
+      <Text style={{ fontSize: 20, fontWeight: "800", color: TEXT_MAIN }} numberOfLines={1}>
         {value}
       </Text>
-      <Text
-        style={{
-          fontSize: 12,
-          color: "#64748B",
-          marginTop: 2,
-          textAlign: "center",
-        }}
-      >
+      <Text style={{ fontSize: 11, color: TEXT_SUB, marginTop: 4, textAlign: "center" }}>
         {label}
       </Text>
     </View>
@@ -69,46 +73,199 @@ function StatBox({ value, label }) {
 
 function SectionTitle({ title }) {
   return (
-    <Text
-      style={{
-        fontSize: 18,
-        fontWeight: "800",
-        color: "#0F172A",
-        marginBottom: 12,
-        marginTop: 8,
-      }}
-    >
+    <Text style={{ fontSize: 17, fontWeight: "800", color: TEXT_MAIN, marginBottom: 12 }}>
       {title}
     </Text>
   );
 }
 
+function IconButton({ onPress, children, active }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      style={{
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+        backgroundColor: active ? colors.black : BG_SOFT,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 1,
+        borderColor: active ? colors.black : BORDER,
+      }}
+    >
+      {children}
+    </TouchableOpacity>
+  );
+}
+
+function ProfileFixedHeader({ insets, user, onPost, onSettings }) {
+  const tag = tagStyle();
+  const accountLabel =
+    user?.user_type === "empresa"
+      ? "Empresa"
+      : user?.user_type === "freelancer"
+        ? "Freelancer"
+        : "Profissional";
+  const location = [user?.city, user?.province].filter(Boolean).join(", ") || "Moçambique";
+
+  return (
+    <View
+      style={{
+        paddingTop: insets.top,
+        backgroundColor: BG,
+        borderBottomWidth: 1,
+        borderBottomColor: BORDER,
+      }}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 20,
+          paddingTop: 8,
+          paddingBottom: 12,
+        }}
+      >
+        <Text style={{ fontSize: 22, fontWeight: "800", color: TEXT_MAIN }}>Perfil</Text>
+        <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+          <TouchableOpacity
+            onPress={onPost}
+            activeOpacity={0.85}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              backgroundColor: ACCENT,
+              paddingHorizontal: 14,
+              paddingVertical: 10,
+              borderRadius: radius.pill,
+            }}
+          >
+            <Plus size={18} color="#fff" strokeWidth={2.5} />
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>Postar</Text>
+          </TouchableOpacity>
+          <IconButton onPress={onSettings}>
+            <Settings size={18} color={TEXT_MAIN} />
+          </IconButton>
+        </View>
+      </View>
+
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 20,
+          paddingBottom: 16,
+          gap: 16,
+        }}
+      >
+        <View
+          style={{
+            borderWidth: 2,
+            borderColor: ACCENT_LIGHT,
+            borderRadius: 999,
+            padding: 2,
+          }}
+        >
+          <MabassaAvatar uri={user?.avatar_url} name={user?.name || "Perfil Mabassa"} size={72} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 20, fontWeight: "800", color: TEXT_MAIN }} numberOfLines={2}>
+            {user?.name || "Perfil Mabassa"}
+          </Text>
+          <View
+            style={{
+              alignSelf: "flex-start",
+              backgroundColor: tag.bg,
+              paddingHorizontal: 10,
+              paddingVertical: 4,
+              borderRadius: radius.pill,
+              marginTop: 6,
+            }}
+          >
+            <Text style={{ fontSize: 12, fontWeight: "600", color: tag.text }}>{accountLabel}</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 8 }}>
+            <MapPin size={13} color={TEXT_MUTED} />
+            <Text style={{ fontSize: 13, color: TEXT_SUB, flex: 1 }} numberOfLines={1}>
+              {location}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8 }}>
+            <CheckCircle
+              size={14}
+              color={user?.is_verified ? ACCENT : TEXT_MUTED}
+              fill={user?.is_verified ? ACCENT_LIGHT : "transparent"}
+            />
+            <Text
+              style={{
+                fontSize: 12,
+                color: user?.is_verified ? ACCENT_DARK : TEXT_SUB,
+                fontWeight: "600",
+              }}
+            >
+              {user?.is_verified ? "Perfil verificado" : "Perfil em configuração"}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function AuthFixedHeader({ insets, mode }) {
+  return (
+    <View
+      style={{
+        paddingTop: insets.top,
+        paddingHorizontal: 20,
+        paddingBottom: 16,
+        backgroundColor: BG,
+        borderBottomWidth: 1,
+        borderBottomColor: BORDER,
+      }}
+    >
+      <Text style={{ fontSize: 22, fontWeight: "800", color: TEXT_MAIN, marginTop: 8 }}>
+        {mode === "login" ? "Entrar" : "Criar conta"}
+      </Text>
+      <Text style={{ fontSize: 14, color: TEXT_SUB, marginTop: 6 }}>
+        Acesse o Mabassa para configurar o seu perfil.
+      </Text>
+    </View>
+  );
+}
 
 function AuthPanel({ insets, mode, setMode, form, setForm, onSubmit, error, loading }) {
   return (
-    <View style={{ flex: 1, backgroundColor: BG, paddingTop: insets.top }}>
+    <View style={{ flex: 1, backgroundColor: BG_SOFT }}>
+      <AuthFixedHeader insets={insets} mode={mode} />
       <ScrollView
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: "center",
-          padding: 16,
-          paddingBottom: insets.bottom + 80,
+          padding: 20,
+          paddingBottom: insets.bottom + 88,
           gap: 12,
         }}
       >
         <View style={{ width: "100%", maxWidth: 420, alignSelf: "center", gap: 12 }}>
-          <Text style={{ fontSize: 28, fontWeight: "800", color: "#0F172A" }}>
-            {mode === "login" ? "Entrar" : "Criar conta"}
-          </Text>
-          <Text style={{ fontSize: 14, color: "#64748B", marginBottom: 10 }}>
-            Acesse o Mabassa para configurar o seu perfil.
-          </Text>
-
           {mode === "register" && (
             <>
-              <TextInput value={form.name} onChangeText={(name) => setForm((current) => ({ ...current, name }))} placeholder="Nome" style={inputStyle} />
-              <TextInput value={form.phone} onChangeText={(phone) => setForm((current) => ({ ...current, phone }))} placeholder="Telefone" style={inputStyle} />
+              <TextInput
+                value={form.name}
+                onChangeText={(name) => setForm((current) => ({ ...current, name }))}
+                placeholder="Nome"
+                style={inputStyle}
+              />
+              <TextInput
+                value={form.phone}
+                onChangeText={(phone) => setForm((current) => ({ ...current, phone }))}
+                placeholder="Telefone"
+                style={inputStyle}
+              />
               <LocationFields
                 province={form.province}
                 city={form.city}
@@ -120,17 +277,45 @@ function AuthPanel({ insets, mode, setMode, form, setForm, onSubmit, error, load
             </>
           )}
 
-          <TextInput value={form.email} onChangeText={(email) => setForm((current) => ({ ...current, email }))} placeholder="Email" autoCapitalize="none" keyboardType="email-address" style={inputStyle} />
-          <TextInput value={form.password} onChangeText={(password) => setForm((current) => ({ ...current, password }))} placeholder="Senha" secureTextEntry style={inputStyle} />
+          <TextInput
+            value={form.email}
+            onChangeText={(email) => setForm((current) => ({ ...current, email }))}
+            placeholder="Email"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            style={inputStyle}
+          />
+          <TextInput
+            value={form.password}
+            onChangeText={(password) => setForm((current) => ({ ...current, password }))}
+            placeholder="Senha"
+            secureTextEntry
+            style={inputStyle}
+          />
           {error && <Text style={{ color: "#DC2626", fontSize: 13 }}>{error}</Text>}
-          <TouchableOpacity onPress={onSubmit} disabled={loading} style={[loginButton, { opacity: loading ? 0.65 : 1 }]}>
+          <TouchableOpacity
+            onPress={onSubmit}
+            disabled={loading}
+            style={{
+              backgroundColor: ACCENT,
+              borderRadius: radius.md,
+              paddingVertical: 16,
+              minHeight: 54,
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: loading ? 0.65 : 1,
+            }}
+          >
             <Text style={{ color: "#fff", fontWeight: "800", fontSize: 15 }}>
               {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setMode((current) => (current === "login" ? "register" : "login"))} style={{ alignItems: "center", paddingVertical: 12 }}>
-            <Text style={{ color: BLUE, fontWeight: "700" }}>
-              {mode === "login" ? "Criar nova conta" : "Ja tenho conta"}
+          <TouchableOpacity
+            onPress={() => setMode((current) => (current === "login" ? "register" : "login"))}
+            style={{ alignItems: "center", paddingVertical: 12 }}
+          >
+            <Text style={{ color: ACCENT_DARK, fontWeight: "700" }}>
+              {mode === "login" ? "Criar nova conta" : "Já tenho conta"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -150,21 +335,9 @@ function EditProfilePanel({
   avatarLoading,
 }) {
   return (
-    <View
-      style={{
-        backgroundColor: "#fff",
-        borderRadius: 18,
-        padding: 16,
-        marginBottom: 16,
-        shadowColor: "#0F172A",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 2,
-      }}
-    >
+    <View style={{ ...cardStyle, marginBottom: 16 }}>
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
-        <Text style={{ flex: 1, fontSize: 18, fontWeight: "900", color: "#0F172A" }}>
+        <Text style={{ flex: 1, fontSize: 17, fontWeight: "800", color: TEXT_MAIN }}>
           Editar perfil
         </Text>
         <TouchableOpacity
@@ -173,13 +346,13 @@ function EditProfilePanel({
           style={{
             width: 36,
             height: 36,
-            borderRadius: 12,
-            backgroundColor: "#F1F5F9",
+            borderRadius: radius.sm,
+            backgroundColor: BG_SOFT,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <X size={17} color="#334155" />
+          <X size={17} color={TEXT_SUB} />
         </TouchableOpacity>
       </View>
 
@@ -194,19 +367,19 @@ function EditProfilePanel({
                 bottom: -2,
                 width: 34,
                 height: 34,
-                borderRadius: 12,
-                backgroundColor: BLUE,
+                borderRadius: radius.sm,
+                backgroundColor: ACCENT,
                 alignItems: "center",
                 justifyContent: "center",
                 borderWidth: 3,
-                borderColor: "#fff",
+                borderColor: BG,
               }}
             >
               <Camera size={15} color="#fff" />
             </View>
           </View>
         </TouchableOpacity>
-        <Text style={{ color: "#64748B", fontSize: 12, fontWeight: "700", marginTop: 8 }}>
+        <Text style={{ color: TEXT_SUB, fontSize: 12, fontWeight: "600", marginTop: 8 }}>
           {avatarLoading ? "Enviando avatar..." : "Tocar para trocar avatar"}
         </Text>
       </View>
@@ -233,15 +406,17 @@ function EditProfilePanel({
           inputStyle={inputStyle}
           rowStyle={{ flexDirection: "column", gap: 12 }}
         />
-        {error && <Text style={{ color: "#DC2626", fontSize: 13, fontWeight: "700" }}>{error}</Text>}
+        {error && (
+          <Text style={{ color: "#DC2626", fontSize: 13, fontWeight: "700" }}>{error}</Text>
+        )}
         <TouchableOpacity
           onPress={onSave}
           disabled={loading || avatarLoading}
           activeOpacity={0.85}
           style={{
-            backgroundColor: BLUE,
+            backgroundColor: ACCENT,
             minHeight: 54,
-            borderRadius: 14,
+            borderRadius: radius.md,
             alignItems: "center",
             justifyContent: "center",
             flexDirection: "row",
@@ -250,8 +425,8 @@ function EditProfilePanel({
           }}
         >
           <Save size={17} color="#fff" />
-          <Text style={{ color: "#fff", fontSize: 15, fontWeight: "900" }}>
-            {loading ? "Guardando..." : "Guardar alteracoes"}
+          <Text style={{ color: "#fff", fontSize: 15, fontWeight: "800" }}>
+            {loading ? "Guardando..." : "Guardar alterações"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -264,7 +439,6 @@ export default function PerfilScreen() {
   const router = useRouter();
   const { auth, isAuthenticated, login, register, signOut, setAuth } = useAuth();
   const user = auth?.user;
-  const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -289,13 +463,11 @@ export default function PerfilScreen() {
   const [editSaving, setEditSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
 
-  const goCreate = (path) => {
-    setCreateOpen(false);
-    router.push(path);
+  const openCreatePost = () => {
+    router.push("/create-post");
   };
 
   const openEdit = () => {
-    setCreateOpen(false);
     setEditError(null);
     setEditForm({
       name: user?.name || "",
@@ -311,7 +483,7 @@ export default function PerfilScreen() {
     setEditError(null);
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setEditError("Permita acesso a galeria para escolher um avatar.");
+      setEditError("Permita acesso à galeria para escolher um avatar.");
       return;
     }
 
@@ -403,390 +575,235 @@ export default function PerfilScreen() {
     );
   }
 
+  const tag = tagStyle();
+
   return (
-    <View style={{ flex: 1, backgroundColor: BG }}>
+    <View style={{ flex: 1, backgroundColor: BG_SOFT }}>
+      <ProfileFixedHeader
+        insets={insets}
+        user={user}
+        onPost={openCreatePost}
+        onSettings={() => router.push("/settings")}
+      />
+
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 16,
+          paddingBottom: insets.bottom + 88,
+        }}
       >
-        {/* Hero Section */}
-        <View
-          style={{
-            backgroundColor: BLUE,
-            paddingTop: insets.top + 16,
-            paddingBottom: 70,
-            paddingHorizontal: 16,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "flex-end",
-              gap: 10,
-              marginBottom: 16,
-            }}
-          >
-            <TouchableOpacity
-              onPress={() => setCreateOpen((value) => !value)}
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 10,
-                backgroundColor: "rgba(255,255,255,0.2)",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {createOpen ? <X size={18} color="#fff" /> : <Plus size={20} color="#fff" />}
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push("/settings")}
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 10,
-                backgroundColor: "rgba(255,255,255,0.2)",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Settings size={17} color="#fff" />
-            </TouchableOpacity>
+        <View style={cardStyle}>
+          <View style={{ flexDirection: "row" }}>
+            <StatBox
+              value={user?.user_type === "empresa" ? "Empresa" : "Profissional"}
+              label="Tipo de conta"
+            />
+            <View style={{ width: 1, backgroundColor: BORDER }} />
+            <StatBox value={user?.province || "—"} label="Província" />
+            <View style={{ width: 1, backgroundColor: BORDER }} />
+            <StatBox value={user?.city || "—"} label="Cidade" />
           </View>
-          {createOpen && (
-            <View
-              style={{
-                backgroundColor: "rgba(255,255,255,0.16)",
-                borderRadius: 16,
-                padding: 10,
-                gap: 8,
-                marginBottom: 16,
-              }}
-            >
-              <TouchableOpacity
-                onPress={() => goCreate("/create-post")}
-                style={{
-                  backgroundColor: "#fff",
-                  borderRadius: 12,
-                  paddingVertical: 12,
-                  paddingHorizontal: 14,
-                }}
-              >
-                <Text style={{ fontSize: 14, fontWeight: "800", color: "#0F172A" }}>
-                  Criar post
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => goCreate("/create-service")}
-                style={{
-                  backgroundColor: "#fff",
-                  borderRadius: 12,
-                  paddingVertical: 12,
-                  paddingHorizontal: 14,
-                }}
-              >
-                <Text style={{ fontSize: 14, fontWeight: "800", color: "#0F172A" }}>
-                  Publicar servico
-                </Text>
-              </TouchableOpacity>
-              {user?.user_type === "empresa" && (
-                <TouchableOpacity
-                  onPress={() => goCreate("/create-job")}
-                  style={{
-                    backgroundColor: "#fff",
-                    borderRadius: 12,
-                    paddingVertical: 12,
-                    paddingHorizontal: 14,
-                  }}
-                >
-                  <Text style={{ fontSize: 14, fontWeight: "800", color: "#0F172A" }}>
-                    Publicar vaga
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
 
-          <View style={{ alignItems: "center" }}>
-            <View
-              style={{
-                borderWidth: 3,
-                borderColor: "rgba(255,255,255,0.6)",
-                borderRadius: 42,
-                marginBottom: 12,
-              }}
-            >
-              <MabassaAvatar
-                uri={user?.avatar_url}
-                name={user?.name || "Perfil Mabassa"}
-                size={80}
-              />
-            </View>
-            <Text style={{ fontSize: 22, fontWeight: "800", color: "#fff" }}>
-              {user?.name || "Perfil Mabassa"}
+          <TouchableOpacity
+            onPress={() => router.push("/edit-profile")}
+            style={{
+              marginTop: 16,
+              paddingVertical: 14,
+              borderRadius: radius.md,
+              backgroundColor: ACCENT,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+            }}
+            activeOpacity={0.85}
+          >
+            <Edit3 size={16} color="#fff" />
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>Editar perfil</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={openEdit}
+            style={{
+              marginTop: 10,
+              paddingVertical: 12,
+              borderRadius: radius.md,
+              backgroundColor: BG_SOFT,
+              borderWidth: 1,
+              borderColor: BORDER,
+              alignItems: "center",
+            }}
+            activeOpacity={0.85}
+          >
+            <Text style={{ color: TEXT_MAIN, fontWeight: "600", fontSize: 14 }}>
+              Edição rápida aqui
             </Text>
-            <Text
-              style={{
-                fontSize: 14,
-                color: "rgba(255,255,255,0.8)",
-                marginTop: 4,
-              }}
-            >
-              {user?.user_type === "empresa" ? "Empresa" : "Profissional"}
-            </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                marginTop: 8,
-              }}
-            >
-              <MapPin size={13} color="rgba(255,255,255,0.7)" />
-              <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
-                {[user?.city, user?.province].filter(Boolean).join(", ") || "Mocambique"}
-              </Text>
-            </View>
-          </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={signOut}
+            style={{
+              marginTop: 10,
+              paddingVertical: 12,
+              borderRadius: radius.md,
+              backgroundColor: BG_SOFT,
+              alignItems: "center",
+            }}
+            activeOpacity={0.85}
+          >
+            <Text style={{ color: TEXT_SUB, fontWeight: "700", fontSize: 14 }}>Sair</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Content card overlay */}
-        <View style={{ paddingHorizontal: 16, marginTop: -50 }}>
-          {/* Rating + Stats card */}
-          <View
-            style={{
-              backgroundColor: "#fff",
-              borderRadius: 20,
-              padding: 18,
-              shadowColor: "#0F172A",
-              shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 0.12,
-              shadowRadius: 16,
-              elevation: 6,
-              marginBottom: 16,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                marginBottom: 16,
-              }}
-            >
-              <CheckCircle size={14} color={user?.is_verified ? GREEN : "#94A3B8"} fill={user?.is_verified ? GREEN : "transparent"} />
-              <Text style={{ fontSize: 13, color: user?.is_verified ? GREEN : "#64748B", fontWeight: "700" }}>
-                {user?.is_verified ? "Perfil verificado" : "Perfil em configuracao"}
-              </Text>
-            </View>
+        {editOpen && (
+          <EditProfilePanel
+            form={editForm}
+            setForm={setEditForm}
+            onPickAvatar={pickAvatar}
+            onCancel={() => setEditOpen(false)}
+            onSave={saveProfile}
+            error={editError}
+            loading={editSaving}
+            avatarLoading={avatarUploading}
+          />
+        )}
 
-            <View
-              style={{
-                height: 1,
-                backgroundColor: "#F1F5F9",
-                marginBottom: 16,
-              }}
-            />
-
-            <View style={{ flexDirection: "row" }}>
-              <StatBox value={user?.user_type === "empresa" ? "Empresa" : "Profissional"} label="Tipo de conta" />
-              <View style={{ width: 1, backgroundColor: "#F1F5F9" }} />
-              <StatBox value={user?.province || "-"} label="Provincia" />
-              <View style={{ width: 1, backgroundColor: "#F1F5F9" }} />
-              <StatBox value={user?.city || "-"} label="Cidade" />
-            </View>
-
-            <TouchableOpacity
-              onPress={() => router.push("/edit-profile")}
-              style={{
-                marginTop: 16,
-                paddingVertical: 12,
-                borderRadius: 14,
-                backgroundColor: BLUE,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-              }}
-              activeOpacity={0.8}
-            >
-              <Edit3 size={16} color="#fff" />
-              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>
-                Editar Perfil
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={signOut}
-              style={{
-                marginTop: 10,
-                paddingVertical: 10,
-                borderRadius: 14,
-                backgroundColor: "#F1F5F9",
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ color: "#334155", fontWeight: "700", fontSize: 14 }}>
-                Sair
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {editOpen && (
-            <EditProfilePanel
-              form={editForm}
-              setForm={setEditForm}
-              onPickAvatar={pickAvatar}
-              onCancel={() => setEditOpen(false)}
-              onSave={saveProfile}
-              error={editError}
-              loading={editSaving}
-              avatarLoading={avatarUploading}
-            />
-          )}
-
-          {/* About */}
-          <View
-            style={{
-              backgroundColor: "#fff",
-              borderRadius: 18,
-              padding: 16,
-              marginBottom: 16,
-              shadowColor: "#0F172A",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 8,
-              elevation: 2,
-            }}
-          >
-            <SectionTitle title="Sobre" />
-            <Text style={{ fontSize: 14, color: "#64748B", lineHeight: 21 }}>
-              Complete o seu perfil para aparecer melhor nas pesquisas do Mabassa.
-              Aqui ficam os dados principais da sua conta e as publicacoes que
-              voce criar no aplicativo.
-            </Text>
-
-            <View
-              style={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                gap: 8,
-                marginTop: 14,
-              }}
-            >
-              {[
-                user?.user_type === "empresa" ? "Empresa" : "Profissional",
-                user?.province,
-                user?.city,
-              ].filter(Boolean).map((skill) => (
+        <View style={{ ...cardStyle }}>
+          <SectionTitle title="Sobre" />
+          <Text style={{ fontSize: 14, color: TEXT_SUB, lineHeight: 22 }}>
+            Complete o seu perfil para aparecer melhor nas pesquisas do Mabassa. Aqui ficam os
+            dados principais da sua conta e as publicações que você criar no aplicativo.
+          </Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
+            {[
+              user?.user_type === "empresa" ? "Empresa" : "Profissional",
+              user?.province,
+              user?.city,
+            ]
+              .filter(Boolean)
+              .map((skill) => (
                 <View
                   key={skill}
                   style={{
-                    backgroundColor: BLUE + "12",
+                    backgroundColor: tag.bg,
                     paddingHorizontal: 12,
                     paddingVertical: 6,
-                    borderRadius: 20,
+                    borderRadius: radius.pill,
                   }}
                 >
-                  <Text
-                    style={{ fontSize: 12, fontWeight: "600", color: BLUE }}
-                  >
-                    {skill}
-                  </Text>
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: tag.text }}>{skill}</Text>
                 </View>
               ))}
+          </View>
+        </View>
+
+        {user?.user_type === "normal" && (
+          <View style={{ ...cardStyle }}>
+            <SectionTitle title="Conta profissional" />
+            <Text style={{ fontSize: 14, color: TEXT_SUB, lineHeight: 22 }}>
+              Configure como quer trabalhar no Mabassa.
+            </Text>
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}>
+              <TouchableOpacity
+                onPress={() => router.push("/become-company")}
+                activeOpacity={0.85}
+                style={{
+                  flex: 1,
+                  minHeight: 52,
+                  borderRadius: radius.md,
+                  backgroundColor: ACCENT,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  gap: 8,
+                  paddingHorizontal: 10,
+                }}
+              >
+                <Building2 size={17} color="#fff" />
+                <Text style={{ color: "#fff", fontWeight: "800", fontSize: 13 }}>Criar empresa</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => router.push("/become-freelancer")}
+                activeOpacity={0.85}
+                style={{
+                  flex: 1,
+                  minHeight: 52,
+                  borderRadius: radius.md,
+                  backgroundColor: ACCENT_LIGHT,
+                  borderWidth: 1,
+                  borderColor: colors.primaryMuted,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  gap: 8,
+                  paddingHorizontal: 10,
+                }}
+              >
+                <UserRoundCheck size={17} color={ACCENT_DARK} />
+                <Text style={{ color: ACCENT_DARK, fontWeight: "800", fontSize: 13 }}>
+                  Virar freelancer
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
+        )}
 
-          {user?.user_type === "normal" && (
-            <View
-              style={{
-                backgroundColor: "#fff",
-                borderRadius: 18,
-                padding: 16,
-                marginBottom: 16,
-                shadowColor: "#0F172A",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.06,
-                shadowRadius: 8,
-                elevation: 2,
-              }}
-            >
-              <SectionTitle title="Conta profissional" />
-              <Text style={{ fontSize: 14, color: "#64748B", lineHeight: 21 }}>
-                Configure como quer trabalhar no Mabassa.
-              </Text>
-              <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}>
-                {user?.user_type !== "empresa" && (
-                  <TouchableOpacity
-                    onPress={() => router.push("/become-company")}
-                    activeOpacity={0.85}
-                    style={{
-                      flex: 1,
-                      minHeight: 52,
-                      borderRadius: 14,
-                      backgroundColor: BLUE,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexDirection: "row",
-                      gap: 8,
-                      paddingHorizontal: 10,
-                    }}
-                  >
-                    <Building2 size={17} color="#fff" />
-                    <Text style={{ color: "#fff", fontWeight: "800", fontSize: 13 }}>
-                      Criar empresa
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                {user?.user_type !== "freelancer" && (
-                  <TouchableOpacity
-                    onPress={() => router.push("/become-freelancer")}
-                    activeOpacity={0.85}
-                    style={{
-                      flex: 1,
-                      minHeight: 52,
-                      borderRadius: 14,
-                      backgroundColor: "#ECFDF5",
-                      borderWidth: 1,
-                      borderColor: "#BBF7D0",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexDirection: "row",
-                      gap: 8,
-                      paddingHorizontal: 10,
-                    }}
-                  >
-                    <UserRoundCheck size={17} color={GREEN} />
-                    <Text style={{ color: "#047857", fontWeight: "800", fontSize: 13 }}>
-                      Virar freelancer
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-          )}
-
-          <View
+        <View style={{ ...cardStyle, marginBottom: 0 }}>
+          <SectionTitle title="Publicações" />
+          <Text style={{ fontSize: 14, color: TEXT_SUB, lineHeight: 22, marginBottom: 14 }}>
+            Crie conteúdo para o feed do Mabassa.
+          </Text>
+          <TouchableOpacity
+            onPress={openCreatePost}
+            activeOpacity={0.85}
             style={{
-              backgroundColor: "#fff",
-              borderRadius: 18,
-              padding: 16,
-              marginTop: 4,
-              shadowColor: "#0F172A",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 8,
-              elevation: 2,
+              backgroundColor: ACCENT,
+              borderRadius: radius.md,
+              paddingVertical: 14,
+              alignItems: "center",
+              marginBottom: 10,
             }}
           >
-            <SectionTitle title="Publicacoes" />
-            <Text style={{ fontSize: 14, color: "#64748B", lineHeight: 21 }}>
-              Use o botao + no topo do perfil para criar post, publicar servico
-              ou, se a conta for empresa, publicar uma vaga.
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>Postar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push("/create-service")}
+            activeOpacity={0.85}
+            style={{
+              backgroundColor: BG_SOFT,
+              borderRadius: radius.md,
+              paddingVertical: 12,
+              alignItems: "center",
+              borderWidth: 1,
+              borderColor: BORDER,
+              marginBottom: 10,
+            }}
+          >
+            <Text style={{ color: TEXT_MAIN, fontWeight: "600", fontSize: 14 }}>
+              Publicar serviço
             </Text>
-          </View>
-
+          </TouchableOpacity>
+          {user?.user_type === "empresa" && (
+            <TouchableOpacity
+              onPress={() => router.push("/create-job")}
+              activeOpacity={0.85}
+              style={{
+                backgroundColor: BG_SOFT,
+                borderRadius: radius.md,
+                paddingVertical: 12,
+                alignItems: "center",
+                borderWidth: 1,
+                borderColor: BORDER,
+              }}
+            >
+              <Text style={{ color: TEXT_MAIN, fontWeight: "600", fontSize: 14 }}>
+                Publicar vaga
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </View>
