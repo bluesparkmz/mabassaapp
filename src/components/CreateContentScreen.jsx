@@ -17,6 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Briefcase, ImagePlus, Send, Sparkles, Trash2, Type } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LocationFields from "@/components/LocationFields";
+import ScreenFixedHeader from "@/components/ScreenFixedHeader";
 import { freelancerCategories } from "@/data/freelancersData";
 import { getDefaultDistrict } from "@/data/mozambiqueLocationsData";
 import { mabassaApi } from "@/utils/api";
@@ -39,20 +40,14 @@ const DEFAULT_PROVINCE = "Cidade de Maputo";
 
 function CreateHeader({ insets, title, subtitle, icon: Icon, onBack }) {
   return (
-    <View
-      style={{
-        paddingTop: insets.top,
-        backgroundColor: BG,
-        borderBottomWidth: 1,
-        borderBottomColor: BORDER,
-      }}
-    >
+    <ScreenFixedHeader insets={insets}>
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
           paddingHorizontal: 20,
-          paddingVertical: 12,
+          paddingTop: 8,
+          paddingBottom: 4,
           gap: 12,
         }}
       >
@@ -89,7 +84,7 @@ function CreateHeader({ insets, title, subtitle, icon: Icon, onBack }) {
           <Icon size={19} color={ACCENT_DARK} />
         </View>
       </View>
-    </View>
+    </ScreenFixedHeader>
   );
 }
 

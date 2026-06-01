@@ -25,6 +25,7 @@ import SkeletonCard from "@/components/SkeletonCard";
 import HomeHeader from "@/components/HomeHeader";
 import FeedPromoBanner from "@/components/FeedPromoBanner";
 import FilterChips from "@/components/FilterChips";
+import ScreenFixedHeader from "@/components/ScreenFixedHeader";
 import { useUser } from "@/utils/auth/useUser";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
@@ -35,6 +36,7 @@ import {
   TEXT_SUB,
   TEXT_MUTED,
   BG,
+  BG_SOFT,
   BORDER,
   feedCardStyle,
   jobTypeBadgeStyle,
@@ -452,30 +454,29 @@ export default function FeedScreen() {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG }}>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}
-        showsVerticalScrollIndicator={false}
-      >
+    <View style={{ flex: 1, backgroundColor: BG_SOFT }}>
+      <ScreenFixedHeader insets={insets} paddingBottom={10}>
         <HomeHeader
-          paddingTop={insets.top + 8}
+          paddingTop={8}
           userName={user?.name}
           userAvatar={user?.avatar_url}
           searchText={searchText}
           onSearchChange={setSearchText}
           onAvatarPress={() => router.push("/(tabs)/perfil")}
         />
+        <FilterChips
+          options={feedTypes}
+          selected={activeFilter}
+          onSelect={setActiveFilter}
+          style={{ marginTop: 4 }}
+        />
+      </ScreenFixedHeader>
 
-        <View style={{ marginTop: 12 }}>
-          <FilterChips
-            options={feedTypes}
-            selected={activeFilter}
-            onSelect={setActiveFilter}
-            showFilterIcon
-          />
-        </View>
-
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}
+        showsVerticalScrollIndicator={false}
+      >
         <FeedPromoBanner onPress={() => setActiveFilter("Vagas")} />
 
         <View style={{ paddingHorizontal: 20, marginTop: 20, marginBottom: 12 }}>

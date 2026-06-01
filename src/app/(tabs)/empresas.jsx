@@ -11,7 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react-native";
 import MabassaAvatar from "@/components/MabassaAvatar";
-import FilterChips from "@/components/FilterChips";
+import ListScreenHeader from "@/components/ListScreenHeader";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
 import {
@@ -19,9 +19,11 @@ import {
   ACCENT_DARK,
   TEXT_MAIN,
   TEXT_SUB,
-  BG_SOFT as BG,
+  BG,
+  BG_SOFT,
   CARD,
   BORDER,
+  TEXT_MUTED,
   cardStyle,
   shadow,
   tagStyle,
@@ -155,60 +157,59 @@ function EmpresaCard({ empresa }) {
 
 export default function EmpresasScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [search, setSearch] = useState("");
   const { data: empresas = [], isLoading } = useQuery({
     queryKey: ["empresas"],
     queryFn: mabassaApi.getCompanies,
     onError: (error) => logError("companies-query", error),
   });
 
-  const filtered =
-    selectedCategory === "Todos"
-      ? empresas
-      : empresas.filter((e) => e.area === selectedCategory);
+  const filtered = empresas.filter((e) => {
+    const catMatch = selectedCategory === "Todos" || e.area === selectedCategory;
+    const q = search.trim().toLowerCase();
+    const searchMatch =
+      !q ||
+      e.name?.toLowerCase().includes(q) ||
+      e.area?.toLowerCase().includes(q) ||
+      e.location?.toLowerCase().includes(q);
+    return catMatch && searchMatch;
+  });
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG, paddingTop: insets.top }}>
-      {/* Header */}
-      <View
-        style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24 }}
-      >
-        <Text style={{ fontSize: 32, fontWeight: "700", color: TEXT_MAIN, lineHeight: 40 }}>
-          {filtered.length}+ Empresas
-        </Text>
-        <Text style={{ fontSize: 14, color: TEXT_SUB, marginTop: 4 }}>
-          Descubra empresas a contratar em Angola
-        </Text>
-      </View>
-
-      {/* Filter Chips */}
-      <FilterChips
-        options={categorias}
-        selected={selectedCategory}
-        onSelect={setSelectedCategory}
-        style={{ marginBottom: 16 }}
+    <View style={{ flex: 1, backgroundColor: BG_SOFT }}>
+      <ListScreenHeader
+        insets={insets}
+        title="Empresas"
+        onBack={() => router.push("/(tabs)/feed")}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Pesquisar empresas..."
+        filterOptions={categorias}
+        selectedFilter={selectedCategory}
+        onFilterSelect={setSelectedCategory}
       />
 
-      {/* Count */}
       <Text
         style={{
           fontSize: 13,
-          color: TEXT_SUB,
+          color: TEXT_MUTED,
           fontWeight: "600",
-          paddingHorizontal: 24,
-          marginBottom: 16,
+          paddingHorizontal: 20,
+          paddingTop: 14,
+          paddingBottom: 10,
         }}
       >
         {filtered.length} empresa{filtered.length !== 1 ? "s" : ""} encontrada
         {filtered.length !== 1 ? "s" : ""}
       </Text>
 
-      {/* List */}
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          paddingHorizontal: 24,
-          paddingBottom: insets.bottom + 80,
+          paddingHorizontal: 20,
+          paddingBottom: insets.bottom + 88,
         }}
         showsVerticalScrollIndicator={false}
       >

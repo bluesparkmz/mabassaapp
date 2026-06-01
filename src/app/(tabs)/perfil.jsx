@@ -28,6 +28,7 @@ import { getDefaultDistrict } from "@/data/mozambiqueLocationsData";
 import { authApi, mabassaApi } from "@/utils/api";
 import { useAuth } from "@/utils/auth/useAuth";
 import { logError } from "@/utils/logger";
+import ScreenFixedHeader from "@/components/ScreenFixedHeader";
 import {
   ACCENT,
   ACCENT_DARK,
@@ -111,14 +112,7 @@ function ProfileFixedHeader({ insets, user, onPost, onSettings }) {
   const location = [user?.city, user?.province].filter(Boolean).join(", ") || "Moçambique";
 
   return (
-    <View
-      style={{
-        paddingTop: insets.top,
-        backgroundColor: BG,
-        borderBottomWidth: 1,
-        borderBottomColor: BORDER,
-      }}
-    >
+    <ScreenFixedHeader insets={insets} paddingBottom={0}>
       <View
         style={{
           flexDirection: "row",
@@ -212,29 +206,22 @@ function ProfileFixedHeader({ insets, user, onPost, onSettings }) {
           </View>
         </View>
       </View>
-    </View>
+    </ScreenFixedHeader>
   );
 }
 
 function AuthFixedHeader({ insets, mode }) {
   return (
-    <View
-      style={{
-        paddingTop: insets.top,
-        paddingHorizontal: 20,
-        paddingBottom: 16,
-        backgroundColor: BG,
-        borderBottomWidth: 1,
-        borderBottomColor: BORDER,
-      }}
-    >
-      <Text style={{ fontSize: 22, fontWeight: "800", color: TEXT_MAIN, marginTop: 8 }}>
-        {mode === "login" ? "Entrar" : "Criar conta"}
-      </Text>
-      <Text style={{ fontSize: 14, color: TEXT_SUB, marginTop: 6 }}>
-        Acesse o Mabassa para configurar o seu perfil.
-      </Text>
-    </View>
+    <ScreenFixedHeader insets={insets}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
+        <Text style={{ fontSize: 22, fontWeight: "800", color: TEXT_MAIN }}>
+          {mode === "login" ? "Entrar" : "Criar conta"}
+        </Text>
+        <Text style={{ fontSize: 14, color: TEXT_SUB, marginTop: 6 }}>
+          Acesse o Mabassa para configurar o seu perfil.
+        </Text>
+      </View>
+    </ScreenFixedHeader>
   );
 }
 

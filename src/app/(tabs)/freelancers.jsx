@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Users, CheckCircle } from "lucide-react-native";
 import MabassaAvatar from "@/components/MabassaAvatar";
 import StarRating from "@/components/StarRating";
-import FilterChips from "@/components/FilterChips";
+import ListScreenHeader from "@/components/ListScreenHeader";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
 import {
@@ -20,9 +20,11 @@ import {
   ACCENT_DARK,
   TEXT_MAIN,
   TEXT_SUB,
-  BG_SOFT as BG,
+  BG,
+  BG_SOFT,
   CARD,
   BORDER,
+  TEXT_MUTED,
   cardStyle,
   shadow,
 } from "@/theme";
@@ -178,8 +180,10 @@ function FreelancerCard({ freelancer, cardWidth }) {
 
 export default function FreelancersScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [search, setSearch] = useState("");
   const { data: freelancers = [], isLoading } = useQuery({
     queryKey: ["freelancers"],
     queryFn: mabassaApi.getFreelancers,
@@ -190,50 +194,48 @@ export default function FreelancersScreen() {
   const GAP = 12;
   const cardWidth = (width - PADDING * 2 - GAP) / 2;
 
-  const filtered =
-    selectedCategory === "Todos"
-      ? freelancers
-      : freelancers.filter((f) => f.category === selectedCategory);
+  const filtered = freelancers.filter((f) => {
+    const catMatch = selectedCategory === "Todos" || f.category === selectedCategory;
+    const q = search.trim().toLowerCase();
+    const searchMatch =
+      !q ||
+      f.name?.toLowerCase().includes(q) ||
+      f.category?.toLowerCase().includes(q) ||
+      f.title?.toLowerCase().includes(q);
+    return catMatch && searchMatch;
+  });
 
   const leftCol = filtered.filter((_, i) => i % 2 === 0);
   const rightCol = filtered.filter((_, i) => i % 2 !== 0);
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG, paddingTop: insets.top }}>
-      {/* Header */}
-      <View
-        style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 }}
-      >
-        <Text style={{ fontSize: 26, fontWeight: "800", color: "#0F172A" }}>
-          Freelancers
-        </Text>
-        <Text style={{ fontSize: 14, color: "#64748B", marginTop: 3 }}>
-          Profissionais prontos a trabalhar
-        </Text>
-      </View>
-
-      {/* Filter */}
-      <FilterChips
-        options={freelancerCategories}
-        selected={selectedCategory}
-        onSelect={setSelectedCategory}
-        style={{ marginBottom: 8 }}
+    <View style={{ flex: 1, backgroundColor: BG_SOFT }}>
+      <ListScreenHeader
+        insets={insets}
+        title="Talentos"
+        onBack={() => router.push("/(tabs)/feed")}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Pesquisar talentos..."
+        filterOptions={freelancerCategories}
+        selectedFilter={selectedCategory}
+        onFilterSelect={setSelectedCategory}
       />
 
       <Text
         style={{
           fontSize: 13,
-          color: "#94A3B8",
+          color: TEXT_MUTED,
           fontWeight: "600",
-          paddingHorizontal: 16,
-          marginBottom: 10,
+          paddingHorizontal: 20,
+          paddingTop: 14,
+          paddingBottom: 10,
         }}
       >
         {filtered.length} profissional{filtered.length !== 1 ? "ais" : ""}{" "}
         disponív{filtered.length !== 1 ? "eis" : "el"}
       </Text>
 
-      {/* Grid */}
       <ScrollView
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}

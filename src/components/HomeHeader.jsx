@@ -26,7 +26,7 @@ export default function HomeHeader({
   const firstName = displayName.split(" ")[0];
 
   return (
-    <View style={{ paddingTop, paddingHorizontal: 20, paddingBottom: 4, backgroundColor: BG }}>
+    <View style={{ paddingTop, paddingHorizontal: 20, paddingBottom: 4 }}>
       <View
         style={{
           flexDirection: "row",

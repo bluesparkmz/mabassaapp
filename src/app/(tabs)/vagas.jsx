@@ -1,21 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
-import { Image } from "expo-image";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import {
-  Briefcase,
-  MapPin,
-  Clock,
-  ChevronRight,
-  SlidersHorizontal,
-  Search,
-  Bell
-} from "lucide-react-native";
+import { Briefcase, MapPin, Clock, ChevronRight } from "lucide-react-native";
 import MabassaAvatar from "@/components/MabassaAvatar";
-import FilterChips from "@/components/FilterChips";
+import ListScreenHeader from "@/components/ListScreenHeader";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
 import {
@@ -23,7 +13,7 @@ import {
   ACCENT_DARK,
   TEXT_MAIN,
   TEXT_SUB,
-  BG_SOFT as BG,
+  BG_SOFT,
   CARD,
   cardStyle,
   shadow,
@@ -156,6 +146,7 @@ function VagaCard({ vaga }) {
 
 export default function VagasScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [selectedType, setSelectedType] = useState("Todos");
   const [search, setSearch] = useState("");
@@ -174,82 +165,71 @@ export default function VagasScreen() {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG, paddingTop: insets.top }}>
+    <View style={{ flex: 1, backgroundColor: BG_SOFT }}>
+      <ListScreenHeader
+        insets={insets}
+        title="Vagas"
+        onBack={() => router.push("/(tabs)/feed")}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Pesquisar vagas..."
+        filterOptions={jobCategories}
+        selectedFilter={selectedCategory}
+        onFilterSelect={setSelectedCategory}
+        secondaryFilters={{
+          options: jobTypes,
+          selected: selectedType,
+          onSelect: setSelectedType,
+        }}
+      />
+
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 20,
+          paddingTop: 16,
+          paddingBottom: 10,
+        }}
+      >
+        <Text style={{ fontSize: 16, fontWeight: "700", color: TEXT_MAIN }}>
+          {filtered.length} vaga{filtered.length !== 1 ? "s" : ""}
+        </Text>
+        <Text style={{ fontSize: 13, color: TEXT_SUB }}>Recentes</Text>
+      </View>
+
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          paddingBottom: insets.bottom + 80,
+          paddingHorizontal: 20,
+          paddingBottom: insets.bottom + 88,
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24 }}>
-          {/* Top bar */}
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: CARD, padding: 6, paddingRight: 16, borderRadius: 30, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
-              <MabassaAvatar uri={null} name="User" size={32} borderRadius={16} />
-              <Text style={{ marginLeft: 10, fontWeight: "600", fontSize: 14, color: TEXT_MAIN }}>Mabassa</Text>
-            </View>
-            <TouchableOpacity style={{ width: 48, height: 48, backgroundColor: CARD, borderRadius: 24, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
-              <Bell size={20} color={TEXT_MAIN} />
-            </TouchableOpacity>
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <View
+              key={index}
+              pointerEvents="none"
+              style={{
+                height: 180,
+                backgroundColor: CARD,
+                borderRadius: 24,
+                marginBottom: 16,
+              }}
+            />
+          ))
+        ) : filtered.length === 0 ? (
+          <View style={{ alignItems: "center", paddingTop: 40, gap: 12 }}>
+            <Briefcase size={48} color="#CBD5E1" />
+            <Text style={{ fontSize: 16, fontWeight: "600", color: TEXT_SUB }}>
+              Nenhuma vaga encontrada
+            </Text>
           </View>
-
-          <Text style={{ fontSize: 32, fontWeight: "700", color: TEXT_MAIN, marginBottom: 24 }}>
-            {vagas.length}+ Vagas publicadas
-          </Text>
-
-          {/* Search Bar */}
-          <View style={{ flexDirection: "row", gap: 12 }}>
-             <View style={{ flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: CARD, borderRadius: 24, paddingHorizontal: 20, height: 56, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
-                <Search size={20} color={TEXT_SUB} />
-                <TextInput 
-                  placeholder="Pesquisar projetos" 
-                  placeholderTextColor={TEXT_SUB}
-                  value={search}
-                  onChangeText={setSearch}
-                  style={{ flex: 1, marginLeft: 12, fontSize: 15, color: TEXT_MAIN, fontWeight: "500" }} 
-                />
-             </View>
-             <TouchableOpacity style={{ width: 56, height: 56, backgroundColor: CARD, borderRadius: 24, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
-                <SlidersHorizontal size={20} color={TEXT_MAIN} />
-             </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={{ paddingHorizontal: 24, flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: TEXT_MAIN }}>Listados Recentemente</Text>
-          <TouchableOpacity>
-            <Text style={{ fontSize: 13, color: TEXT_SUB, textDecorationLine: "underline" }}>Ver todos {filtered.length}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* List */}
-        <View style={{ paddingHorizontal: 24 }}>
-          {isLoading ? (
-            Array.from({ length: 4 }).map((_, index) => (
-              <View
-                key={index}
-                pointerEvents="none"
-                style={{
-                  height: 180,
-                  backgroundColor: CARD,
-                  borderRadius: 24,
-                  marginBottom: 16,
-                }}
-              />
-            ))
-          ) : filtered.length === 0 ? (
-            <View style={{ alignItems: "center", paddingTop: 40, gap: 12 }}>
-              <Briefcase size={48} color="#CBD5E1" />
-              <Text style={{ fontSize: 16, fontWeight: "600", color: TEXT_SUB }}>
-                Nenhuma vaga encontrada
-              </Text>
-            </View>
-          ) : (
-            filtered.map((vaga) => <VagaCard key={vaga.id} vaga={vaga} />)
-          )}
-        </View>
+        ) : (
+          filtered.map((vaga) => <VagaCard key={vaga.id} vaga={vaga} />)
+        )}
       </ScrollView>
     </View>
   );
