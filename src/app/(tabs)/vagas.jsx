@@ -1,23 +1,31 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import {
   Briefcase,
   MapPin,
   Clock,
   ChevronRight,
   SlidersHorizontal,
+  Search,
+  Bell
 } from "lucide-react-native";
 import MabassaAvatar from "@/components/MabassaAvatar";
 import FilterChips from "@/components/FilterChips";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
 
-const BLUE = "#2563EB";
-const GREEN = "#10B981";
-const BG = "#F8FAFC";
+const PURPLE = "#6C5DD3";
+const RED = "#FF5656";
+const TEXT_MAIN = "#11142D";
+const TEXT_SUB = "#808191";
+const BG = "#F8F9FA";
+const CARD = "#FFFFFF";
+
 const jobCategories = [
   "Todos",
   "Tecnologia",
@@ -30,172 +38,88 @@ const jobCategories = [
 ];
 const jobTypes = ["Todos", "Full-time", "Part-time", "Freelancer", "Contrato"];
 
-const TYPE_COLORS = {
-  "Full-time": { bg: "#EFF6FF", text: BLUE },
-  "Part-time": { bg: "#FEF3C7", text: "#D97706" },
-  Freelancer: { bg: "#F0FDF4", text: GREEN },
-};
-
 function VagaCard({ vaga }) {
   const router = useRouter();
-  const typeColor = TYPE_COLORS[vaga.type] || {
-    bg: "#F1F5F9",
-    text: "#64748B",
+  
+  const openDetail = () => {
+    router.push({
+      pathname: "/content-detail",
+      params: { type: "vaga", id: vaga.id, item: JSON.stringify(vaga.raw || vaga) },
+    });
   };
 
   return (
     <TouchableOpacity
+      onPress={openDetail}
       activeOpacity={0.92}
       style={{
-        backgroundColor: "#FFFFFF",
-        borderRadius: 18,
-        padding: 16,
-        marginBottom: 14,
-        shadowColor: "#0F172A",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.08,
-        shadowRadius: 10,
+        backgroundColor: CARD,
+        borderRadius: 24,
+        padding: 24,
+        marginBottom: 16,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
         elevation: 3,
-        borderLeftWidth: 4,
-        borderLeftColor: vaga.isNew ? BLUE : "transparent",
       }}
     >
       {/* Top row */}
-      <TouchableOpacity
-        onPress={() => {
-          const id = vaga.companyProfileId || vaga.companyUserId;
-          if (!id) return;
-          router.push({
-            pathname: "/public-profile",
-            params: { kind: vaga.companyProfileId ? "empresa" : "user", id },
-          });
-        }}
-        activeOpacity={0.8}
-        style={{
-          flexDirection: "row",
-          alignItems: "flex-start",
-          marginBottom: 10,
-        }}
-      >
-        <MabassaAvatar
-          uri={vaga.logo}
-          name={vaga.company}
-          size={48}
-          borderRadius={12}
-        />
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <Text
-              style={{
-                fontSize: 15,
-                fontWeight: "800",
-                color: "#0F172A",
-                flex: 1,
-              }}
-              numberOfLines={1}
-            >
-              {vaga.title}
-            </Text>
-            {vaga.isNew && (
-              <View
-                style={{
-                  backgroundColor: GREEN,
-                  paddingHorizontal: 8,
-                  paddingVertical: 3,
-                  borderRadius: 20,
-                }}
-              >
-                <Text
-                  style={{ fontSize: 10, fontWeight: "800", color: "#fff" }}
-                >
-                  NOVO
-                </Text>
-              </View>
-            )}
-          </View>
-          <Text
-            style={{
-              fontSize: 13,
-              color: "#64748B",
-              fontWeight: "600",
-              marginTop: 2,
-            }}
-          >
-            {vaga.company}
-          </Text>
-        </View>
-      </TouchableOpacity>
-
-      {/* Meta */}
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
-          flexWrap: "wrap",
-          gap: 8,
-          marginBottom: 12,
+          marginBottom: 16,
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <MapPin size={12} color="#94A3B8" />
-          <Text style={{ fontSize: 12, color: "#94A3B8" }}>
-            {vaga.location}
-          </Text>
-        </View>
-        <View
-          style={{
-            width: 3,
-            height: 3,
-            borderRadius: 2,
-            backgroundColor: "#CBD5E1",
+        <TouchableOpacity
+          onPress={() => {
+            const id = vaga.companyProfileId || vaga.companyUserId;
+            if (!id) return;
+            router.push({
+              pathname: "/public-profile",
+              params: { kind: vaga.companyProfileId ? "empresa" : "user", id },
+            });
           }}
-        />
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <Clock size={12} color="#94A3B8" />
-          <Text style={{ fontSize: 12, color: "#94A3B8" }}>
-            {vaga.postedAt}
+          activeOpacity={0.8}
+        >
+          <MabassaAvatar
+            uri={vaga.logo}
+            name={vaga.company}
+            size={48}
+            borderRadius={24}
+          />
+        </TouchableOpacity>
+        <View style={{ flex: 1, marginLeft: 16 }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "700",
+              color: TEXT_MAIN,
+              lineHeight: 22,
+            }}
+            numberOfLines={2}
+          >
+            {vaga.title}
           </Text>
         </View>
       </View>
 
-      {/* Tags */}
+      {/* Meta Info */}
       <View
         style={{
           flexDirection: "row",
-          flexWrap: "wrap",
-          gap: 6,
-          marginBottom: 14,
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 20,
         }}
       >
-        <View
-          style={{
-            backgroundColor: typeColor.bg,
-            paddingHorizontal: 10,
-            paddingVertical: 4,
-            borderRadius: 20,
-          }}
-        >
-          <Text
-            style={{ fontSize: 12, fontWeight: "700", color: typeColor.text }}
-          >
-            {vaga.type}
-          </Text>
-        </View>
-        {vaga.tags.map((tag) => (
-          <View
-            key={tag}
-            style={{
-              backgroundColor: "#F1F5F9",
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              borderRadius: 20,
-            }}
-          >
-            <Text style={{ fontSize: 12, color: "#64748B", fontWeight: "500" }}>
-              {tag}
-            </Text>
-          </View>
-        ))}
+        <Text style={{ fontSize: 13, color: TEXT_SUB }}>
+          Posted in <Text style={{ fontWeight: "700", color: TEXT_MAIN }}>{vaga.category || vaga.company}</Text>
+        </Text>
+        <Text style={{ fontSize: 13, color: TEXT_SUB }}>
+          {vaga.postedAt}
+        </Text>
       </View>
 
       {/* Footer */}
@@ -207,27 +131,26 @@ function VagaCard({ vaga }) {
         }}
       >
         <View>
-          <Text style={{ fontSize: 11, color: "#94A3B8" }}>Salário</Text>
-          <Text style={{ fontSize: 14, fontWeight: "700", color: "#0F172A" }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: RED }}>
             {vaga.salary}
+          </Text>
+          <Text style={{ fontSize: 12, color: TEXT_SUB, marginTop: 4 }}>
+            {vaga.type}
           </Text>
         </View>
         <TouchableOpacity
+          onPress={openDetail}
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 5,
-            backgroundColor: BLUE,
-            paddingHorizontal: 18,
-            paddingVertical: 10,
-            borderRadius: 12,
+            backgroundColor: PURPLE,
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            borderRadius: 24,
           }}
           activeOpacity={0.8}
         >
-          <Text style={{ color: "#fff", fontWeight: "700", fontSize: 13 }}>
+          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
             Candidatar-se
           </Text>
-          <ChevronRight size={14} color="#fff" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -238,6 +161,7 @@ export default function VagasScreen() {
   const insets = useSafeAreaInsets();
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [selectedType, setSelectedType] = useState("Todos");
+  const [search, setSearch] = useState("");
   const { data: vagas = [], isLoading } = useQuery({
     queryKey: ["jobs"],
     queryFn: mabassaApi.getJobs,
@@ -248,118 +172,87 @@ export default function VagasScreen() {
     const catMatch =
       selectedCategory === "Todos" || v.category === selectedCategory;
     const typeMatch = selectedType === "Todos" || v.type === selectedType;
-    return catMatch && typeMatch;
+    const searchMatch = !search || v.title?.toLowerCase().includes(search.toLowerCase()) || v.company?.toLowerCase().includes(search.toLowerCase());
+    return catMatch && typeMatch && searchMatch;
   });
 
   return (
     <View style={{ flex: 1, backgroundColor: BG, paddingTop: insets.top }}>
-      {/* Header */}
-      <View
-        style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 }}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <View>
-            <Text style={{ fontSize: 26, fontWeight: "800", color: "#0F172A" }}>
-              Vagas
-            </Text>
-            <Text style={{ fontSize: 14, color: "#64748B", marginTop: 3 }}>
-              Encontre a oportunidade ideal
-            </Text>
-          </View>
-          <TouchableOpacity
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: 12,
-              backgroundColor: "#FFFFFF",
-              alignItems: "center",
-              justifyContent: "center",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.06,
-              shadowRadius: 4,
-              elevation: 2,
-              borderWidth: 1,
-              borderColor: "#E2E8F0",
-            }}
-          >
-            <SlidersHorizontal size={18} color="#0F172A" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Filters */}
-      <View style={{ marginBottom: 4 }}>
-        <FilterChips
-          options={jobCategories}
-          selected={selectedCategory}
-          onSelect={setSelectedCategory}
-        />
-      </View>
-      <View style={{ marginBottom: 8 }}>
-        <FilterChips
-          options={jobTypes}
-          selected={selectedType}
-          onSelect={setSelectedType}
-        />
-      </View>
-
-      <Text
-        style={{
-          fontSize: 13,
-          color: "#94A3B8",
-          fontWeight: "600",
-          paddingHorizontal: 16,
-          marginBottom: 10,
-        }}
-      >
-        {filtered.length} vaga{filtered.length !== 1 ? "s" : ""} encontrada
-        {filtered.length !== 1 ? "s" : ""}
-      </Text>
-
-      {/* List */}
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          paddingHorizontal: 16,
           paddingBottom: insets.bottom + 80,
         }}
         showsVerticalScrollIndicator={false}
       >
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, index) => (
-            <View
-              key={index}
-              pointerEvents="none"
-              style={{
-                height: 150,
-                backgroundColor: "#FFFFFF",
-                borderRadius: 18,
-                marginBottom: 14,
-              }}
-            />
-          ))
-        ) : filtered.length === 0 ? (
-          <View style={{ alignItems: "center", paddingTop: 60, gap: 12 }}>
-            <Briefcase size={48} color="#CBD5E1" />
-            <Text style={{ fontSize: 16, fontWeight: "600", color: "#94A3B8" }}>
-              Nenhuma vaga encontrada
-            </Text>
-            <Text
-              style={{ fontSize: 13, color: "#CBD5E1", textAlign: "center" }}
-            >
-              Tente ajustar os filtros de pesquisa
-            </Text>
+        {/* Header */}
+        <View style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24 }}>
+          {/* Top bar */}
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: CARD, padding: 6, paddingRight: 16, borderRadius: 30, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
+              <MabassaAvatar uri={null} name="User" size={32} borderRadius={16} />
+              <Text style={{ marginLeft: 10, fontWeight: "600", fontSize: 14, color: TEXT_MAIN }}>Mabassa</Text>
+            </View>
+            <TouchableOpacity style={{ width: 48, height: 48, backgroundColor: CARD, borderRadius: 24, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
+              <Bell size={20} color={TEXT_MAIN} />
+            </TouchableOpacity>
           </View>
-        ) : (
-          filtered.map((vaga) => <VagaCard key={vaga.id} vaga={vaga} />)
-        )}
+
+          <Text style={{ fontSize: 32, fontWeight: "700", color: TEXT_MAIN, marginBottom: 24 }}>
+            {vagas.length}+ Vagas publicadas
+          </Text>
+
+          {/* Search Bar */}
+          <View style={{ flexDirection: "row", gap: 12 }}>
+             <View style={{ flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: CARD, borderRadius: 24, paddingHorizontal: 20, height: 56, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
+                <Search size={20} color={TEXT_SUB} />
+                <TextInput 
+                  placeholder="Pesquisar projetos" 
+                  placeholderTextColor={TEXT_SUB}
+                  value={search}
+                  onChangeText={setSearch}
+                  style={{ flex: 1, marginLeft: 12, fontSize: 15, color: TEXT_MAIN, fontWeight: "500" }} 
+                />
+             </View>
+             <TouchableOpacity style={{ width: 56, height: 56, backgroundColor: CARD, borderRadius: 24, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
+                <SlidersHorizontal size={20} color={TEXT_MAIN} />
+             </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={{ paddingHorizontal: 24, flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: TEXT_MAIN }}>Listados Recentemente</Text>
+          <TouchableOpacity>
+            <Text style={{ fontSize: 13, color: TEXT_SUB, textDecorationLine: "underline" }}>Ver todos {filtered.length}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* List */}
+        <View style={{ paddingHorizontal: 24 }}>
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, index) => (
+              <View
+                key={index}
+                pointerEvents="none"
+                style={{
+                  height: 180,
+                  backgroundColor: CARD,
+                  borderRadius: 24,
+                  marginBottom: 16,
+                }}
+              />
+            ))
+          ) : filtered.length === 0 ? (
+            <View style={{ alignItems: "center", paddingTop: 40, gap: 12 }}>
+              <Briefcase size={48} color="#CBD5E1" />
+              <Text style={{ fontSize: 16, fontWeight: "600", color: TEXT_SUB }}>
+                Nenhuma vaga encontrada
+              </Text>
+            </View>
+          ) : (
+            filtered.map((vaga) => <VagaCard key={vaga.id} vaga={vaga} />)
+          )}
+        </View>
       </ScrollView>
     </View>
   );

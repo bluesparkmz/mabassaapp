@@ -63,6 +63,34 @@ export async function apiRequest(path, options = {}, token = null) {
   }
 }
 
+export async function uploadRequest(path, formData, token = null) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const headers = {
+    Accept: "application/json",
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers,
+      signal: controller.signal,
+      body: formData,
+    });
+    return parseResponse(response);
+  } catch (error) {
+    if (__DEV__) {
+      logError("upload-request", error, { url: `${API_URL}${path}` });
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export const authApi = {
   async login(payload) {
     const token = await apiRequest("/auth/login", {
@@ -78,6 +106,9 @@ export const authApi = {
   },
   me(token) {
     return apiRequest("/auth/me", {}, token);
+  },
+  updateMe(payload, token) {
+    return apiRequest("/auth/me", { method: "PATCH", body: payload }, token);
   },
 };
 
@@ -153,13 +184,27 @@ export function mapFreelancer(profile) {
 }
 
 export const mabassaApi = {
-  getFeed: (type = null) => apiRequest(`/feed${type ? `?type=${type}` : ""}`),
+  getFeed: (type = null) => {
+    const params = new URLSearchParams();
+    if (type) params.set("type", type);
+    params.set("_", String(Date.now()));
+    return apiRequest(`/feed?${params.toString()}`);
+  },
   createPost: (payload, token = null) =>
     apiRequest("/posts", { method: "POST", body: payload }, token),
+  uploadPostImage: (formData, token = null) => uploadRequest("/uploads/posts", formData, token),
+  uploadAvatar: (formData, token = null) => uploadRequest("/uploads/avatars", formData, token),
   createService: (payload, token = null) =>
     apiRequest("/services", { method: "POST", body: payload }, token),
   createJob: (payload, token = null) =>
     apiRequest("/jobs", { method: "POST", body: payload }, token),
+  getPost: (postId) => apiRequest(`/posts/${postId}`),
+  getService: (serviceId) => apiRequest(`/services/${serviceId}`),
+  getJob: (jobId) => apiRequest(`/jobs/${jobId}`),
+  requestService: (serviceId, payload, token = null) =>
+    apiRequest(`/services/${serviceId}/requests`, { method: "POST", body: payload }, token),
+  applyToJob: (jobId, payload, token = null) =>
+    apiRequest(`/jobs/${jobId}/applications`, { method: "POST", body: payload }, token),
   createCompanyProfile: (payload, token = null) =>
     apiRequest("/empresas", { method: "POST", body: payload }, token),
   createFreelancerProfile: (payload, token = null) =>

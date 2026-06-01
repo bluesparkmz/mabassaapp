@@ -1,10 +1,10 @@
-import React from "react";
-import { ScrollView, TouchableOpacity, Text, View } from "react-native";
+ import React from "react";
+import { ScrollView, TouchableOpacity, Text } from "react-native";
 
-const BLUE = "#2563EB";
-const LIGHT_BLUE = "#EFF6FF";
-const GRAY = "#64748B";
+const PURPLE = "#6C5DD3";
+const TEXT_MAIN = "#11142D";
 const BORDER = "#E2E8F0";
+const CARD = "#FFFFFF";
 
 export default function FilterChips({ options, selected, onSelect, style }) {
   return (
@@ -13,8 +13,8 @@ export default function FilterChips({ options, selected, onSelect, style }) {
       keyboardShouldPersistTaps="handled"
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{
-        paddingHorizontal: 16,
-        gap: 8,
+        paddingHorizontal: 20,
+        gap: 10,
         paddingVertical: 4,
       }}
       style={[{ flexGrow: 0 }, style]}
@@ -28,23 +28,23 @@ export default function FilterChips({ options, selected, onSelect, style }) {
             activeOpacity={0.7}
             style={{
               paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 20,
-              backgroundColor: isSelected ? BLUE : "#FFFFFF",
-              borderWidth: 1.5,
-              borderColor: isSelected ? BLUE : BORDER,
+              paddingVertical: 11,
+              borderRadius: 18,
+              backgroundColor: isSelected ? PURPLE : CARD,
+              borderWidth: 1,
+              borderColor: isSelected ? PURPLE : "#EEF2F7",
               shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: isSelected ? 0.12 : 0.04,
-              shadowRadius: 4,
-              elevation: isSelected ? 2 : 1,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: isSelected ? 0.08 : 0.03,
+              shadowRadius: 8,
+              elevation: isSelected ? 3 : 1,
             }}
           >
             <Text
               style={{
                 fontSize: 13,
-                fontWeight: isSelected ? "600" : "500",
-                color: isSelected ? "#FFFFFF" : GRAY,
+                fontWeight: isSelected ? "700" : "600",
+                color: isSelected ? "#FFFFFF" : TEXT_MAIN,
               }}
             >
               {option}

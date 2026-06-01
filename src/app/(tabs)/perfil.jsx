@@ -1,20 +1,24 @@
 ﻿import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Keyboard } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
+  Camera,
   Edit3,
   MapPin,
   Building2,
   UserRoundCheck,
   CheckCircle,
   Plus,
+  Save,
   Settings,
   X,
 } from "lucide-react-native";
 import LocationFields from "@/components/LocationFields";
 import MabassaAvatar from "@/components/MabassaAvatar";
 import { getDefaultDistrict } from "@/data/mozambiqueLocationsData";
+import { authApi, mabassaApi } from "@/utils/api";
 import { useAuth } from "@/utils/auth/useAuth";
 import { logError } from "@/utils/logger";
 
@@ -135,12 +139,140 @@ function AuthPanel({ insets, mode, setMode, form, setForm, onSubmit, error, load
   );
 }
 
+function EditProfilePanel({
+  form,
+  setForm,
+  onPickAvatar,
+  onCancel,
+  onSave,
+  error,
+  loading,
+  avatarLoading,
+}) {
+  return (
+    <View
+      style={{
+        backgroundColor: "#fff",
+        borderRadius: 18,
+        padding: 16,
+        marginBottom: 16,
+        shadowColor: "#0F172A",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 2,
+      }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+        <Text style={{ flex: 1, fontSize: 18, fontWeight: "900", color: "#0F172A" }}>
+          Editar perfil
+        </Text>
+        <TouchableOpacity
+          onPress={onCancel}
+          activeOpacity={0.75}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 12,
+            backgroundColor: "#F1F5F9",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <X size={17} color="#334155" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ alignItems: "center", marginBottom: 14 }}>
+        <TouchableOpacity onPress={onPickAvatar} activeOpacity={0.8} disabled={avatarLoading}>
+          <View>
+            <MabassaAvatar uri={form.avatar_url} name={form.name || "Perfil Mabassa"} size={86} />
+            <View
+              style={{
+                position: "absolute",
+                right: -2,
+                bottom: -2,
+                width: 34,
+                height: 34,
+                borderRadius: 12,
+                backgroundColor: BLUE,
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: 3,
+                borderColor: "#fff",
+              }}
+            >
+              <Camera size={15} color="#fff" />
+            </View>
+          </View>
+        </TouchableOpacity>
+        <Text style={{ color: "#64748B", fontSize: 12, fontWeight: "700", marginTop: 8 }}>
+          {avatarLoading ? "Enviando avatar..." : "Tocar para trocar avatar"}
+        </Text>
+      </View>
+
+      <View style={{ gap: 12 }}>
+        <TextInput
+          value={form.name}
+          onChangeText={(name) => setForm((current) => ({ ...current, name }))}
+          placeholder="Nome"
+          style={inputStyle}
+        />
+        <TextInput
+          value={form.phone}
+          onChangeText={(phone) => setForm((current) => ({ ...current, phone }))}
+          placeholder="Telefone"
+          keyboardType="phone-pad"
+          style={inputStyle}
+        />
+        <LocationFields
+          province={form.province}
+          city={form.city}
+          onProvinceChange={(province) => setForm((current) => ({ ...current, province }))}
+          onCityChange={(city) => setForm((current) => ({ ...current, city }))}
+          inputStyle={inputStyle}
+          rowStyle={{ flexDirection: "column", gap: 12 }}
+        />
+        {error && <Text style={{ color: "#DC2626", fontSize: 13, fontWeight: "700" }}>{error}</Text>}
+        <TouchableOpacity
+          onPress={onSave}
+          disabled={loading || avatarLoading}
+          activeOpacity={0.85}
+          style={{
+            backgroundColor: BLUE,
+            minHeight: 54,
+            borderRadius: 14,
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "row",
+            gap: 8,
+            opacity: loading || avatarLoading ? 0.65 : 1,
+          }}
+        >
+          <Save size={17} color="#fff" />
+          <Text style={{ color: "#fff", fontSize: 15, fontWeight: "900" }}>
+            {loading ? "Guardando..." : "Guardar alteracoes"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 export default function PerfilScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { auth, isAuthenticated, login, register, signOut } = useAuth();
+  const { auth, isAuthenticated, login, register, signOut, setAuth } = useAuth();
   const user = auth?.user;
   const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    phone: "",
+    province: DEFAULT_PROVINCE,
+    city: getDefaultDistrict(DEFAULT_PROVINCE),
+    avatar_url: null,
+  });
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({
     name: "",
@@ -153,10 +285,88 @@ export default function PerfilScreen() {
   });
   const [authError, setAuthError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [editError, setEditError] = useState(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
 
   const goCreate = (path) => {
     setCreateOpen(false);
     router.push(path);
+  };
+
+  const openEdit = () => {
+    setCreateOpen(false);
+    setEditError(null);
+    setEditForm({
+      name: user?.name || "",
+      phone: user?.phone || "",
+      province: user?.province || DEFAULT_PROVINCE,
+      city: user?.city || getDefaultDistrict(user?.province || DEFAULT_PROVINCE),
+      avatar_url: user?.avatar_url || null,
+    });
+    setEditOpen(true);
+  };
+
+  const pickAvatar = async () => {
+    setEditError(null);
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      setEditError("Permita acesso a galeria para escolher um avatar.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (result.canceled || !result.assets?.[0]) return;
+
+    const selected = result.assets[0];
+    const formData = new FormData();
+    formData.append("file", {
+      uri: selected.uri,
+      name: selected.fileName || `avatar-${Date.now()}.jpg`,
+      type: selected.mimeType || "image/jpeg",
+    });
+
+    setAvatarUploading(true);
+    try {
+      const uploaded = await mabassaApi.uploadAvatar(formData, auth?.accessToken);
+      setEditForm((current) => ({ ...current, avatar_url: uploaded.image_url }));
+    } catch (error) {
+      logError("avatar-upload", error);
+      setEditError(error.message);
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const saveProfile = async () => {
+    Keyboard.dismiss();
+    setEditSaving(true);
+    setEditError(null);
+    try {
+      const updatedUser = await authApi.updateMe(
+        {
+          name: editForm.name.trim(),
+          phone: editForm.phone?.trim() || null,
+          province: editForm.province,
+          city: editForm.city,
+          avatar_url: editForm.avatar_url,
+        },
+        auth?.accessToken
+      );
+      setAuth({ ...auth, user: updatedUser });
+      setEditOpen(false);
+    } catch (error) {
+      logError("profile-update", error);
+      setEditError(error.message);
+    } finally {
+      setEditSaving(false);
+    }
   };
 
   const handleAuth = async () => {
@@ -230,6 +440,7 @@ export default function PerfilScreen() {
               {createOpen ? <X size={18} color="#fff" /> : <Plus size={20} color="#fff" />}
             </TouchableOpacity>
             <TouchableOpacity
+              onPress={() => router.push("/settings")}
               style={{
                 width: 38,
                 height: 38,
@@ -387,6 +598,7 @@ export default function PerfilScreen() {
             </View>
 
             <TouchableOpacity
+              onPress={() => router.push("/edit-profile")}
               style={{
                 marginTop: 16,
                 paddingVertical: 12,
@@ -419,6 +631,19 @@ export default function PerfilScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {editOpen && (
+            <EditProfilePanel
+              form={editForm}
+              setForm={setEditForm}
+              onPickAvatar={pickAvatar}
+              onCancel={() => setEditOpen(false)}
+              onSave={saveProfile}
+              error={editError}
+              loading={editSaving}
+              avatarLoading={avatarUploading}
+            />
+          )}
 
           {/* About */}
           <View

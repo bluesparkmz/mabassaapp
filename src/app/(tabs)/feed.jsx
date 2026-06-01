@@ -23,6 +23,7 @@ import {
   Heart,
   MessageCircle,
   Share2,
+  X,
   Zap,
   Users,
 } from "lucide-react-native";
@@ -33,16 +34,28 @@ import { logError } from "@/utils/logger";
 
 const BLUE = "#2563EB";
 const GREEN = "#10B981";
-const PURPLE = "#8B5CF6";
-const BG = "#F0F4F8";
+const PURPLE = "#6C5DD3";
+const RED = "#FF5656";
+const TEXT_MAIN = "#11142D";
+const TEXT_SUB = "#808191";
+const BG = "#F8F9FA";
 const CARD = "#FFFFFF";
-const feedTypes = ["Todos", "Posts", "Vagas", "Servicos", "Empresas"];
+const BORDER = "#E2E8F0";
+const feedTypes = ["Todos", "Posts", "Vagas", "Serviços", "Empresas"];
 
 function openPublicProfile(router, item) {
   const kind = item.profile_type || (item.type === "empresa" ? "empresa" : "user");
   const id = item.profile_id || item.user_id || (item.type === "empresa" ? item.id : null);
   if (!id) return;
   router.push({ pathname: "/public-profile", params: { kind, id } });
+}
+
+function openContentDetail(router, item) {
+  if (!["post", "vaga", "servico"].includes(item.type)) return;
+  router.push({
+    pathname: "/content-detail",
+    params: { type: item.type, id: item.id, item: JSON.stringify(item) },
+  });
 }
 
 // ── Badge ──────────────────────────────────────────────────────────
@@ -70,25 +83,30 @@ function FilterPill({ label, active, onPress }) {
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={0.75}
       style={{
-        paddingHorizontal: 16,
-        paddingVertical: 9,
-        minHeight: 40,
-        borderRadius: 20,
-        backgroundColor: active ? BLUE : CARD,
-        borderWidth: 1.5,
-        borderColor: active ? BLUE : "#E2E8F0",
-        marginRight: 8,
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 24,
+        backgroundColor: CARD,
+        borderWidth: 1,
+        borderColor: active ? PURPLE : BORDER,
         alignItems: "center",
         justifyContent: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: active ? 0.1 : 0.02,
+        shadowRadius: 6,
+        elevation: active ? 2 : 1,
+        flexShrink: 1,
       }}
     >
       <Text
         style={{
-          fontSize: 13,
-          fontWeight: "600",
-          color: active ? "#fff" : "#64748B",
+          fontSize: 14,
+          fontWeight: active ? "600" : "500",
+          color: active ? PURPLE : "#11142D",
+          letterSpacing: 0.2,
         }}
       >
         {label}
@@ -122,41 +140,37 @@ function PostCard({ item }) {
   };
 
   return (
-    <View style={cardStyle}>
+    <TouchableOpacity onPress={() => openContentDetail(router, item)} activeOpacity={0.92} style={cardStyle}>
       {/* Author */}
       <TouchableOpacity
         onPress={() => openPublicProfile(router, item)}
         activeOpacity={0.8}
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}
       >
-        <MabassaAvatar uri={item.avatar} name={item.author} size={44} />
-        <View style={{ flex: 1, marginLeft: 10 }}>
-          <Text style={{ fontSize: 14, fontWeight: "700", color: "#0F172A" }}>
+        <MabassaAvatar uri={item.avatar} name={item.author} size={48} borderRadius={24} />
+        <View style={{ flex: 1, marginLeft: 16 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: TEXT_MAIN }}>
             {item.author}
           </Text>
-          <Text style={{ fontSize: 12, color: "#94A3B8", marginTop: 1 }}>
+          <Text style={{ fontSize: 13, color: TEXT_SUB, marginTop: 1 }}>
             {item.role}
-          </Text>
-        </View>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-          <Clock size={10} color="#94A3B8" />
-          <Text style={{ fontSize: 11, color: "#94A3B8" }}>
-            {item.postedAt}
           </Text>
         </View>
       </TouchableOpacity>
 
       {/* Content */}
-      <Text
-        style={{
-          fontSize: 14,
-          color: "#1E293B",
-          lineHeight: 21,
-          marginBottom: 12,
-        }}
-      >
-        {item.content}
-      </Text>
+      {!!item.content && (
+        <Text
+          style={{
+            fontSize: 15,
+            color: TEXT_MAIN,
+            lineHeight: 22,
+            marginBottom: 16,
+          }}
+        >
+          {item.content}
+        </Text>
+      )}
 
       {/* Image */}
       {item.image && (
@@ -164,9 +178,9 @@ function PostCard({ item }) {
           source={{ uri: item.image }}
           style={{
             width: "100%",
-            height: 180,
-            borderRadius: 12,
-            marginBottom: 12,
+            height: 220,
+            borderRadius: 16,
+            marginBottom: 16,
           }}
           contentFit="cover"
         />
@@ -174,7 +188,7 @@ function PostCard({ item }) {
 
       {/* Divider */}
       <View
-        style={{ height: 1, backgroundColor: "#F1F5F9", marginBottom: 10 }}
+        style={{ height: 1, backgroundColor: BORDER, marginBottom: 16 }}
       />
 
       {/* Actions */}
@@ -191,7 +205,7 @@ function PostCard({ item }) {
               fill={liked ? "#EF4444" : "transparent"}
             />
           </Animated.View>
-          <Text style={{ fontSize: 13, color: "#64748B", fontWeight: "600" }}>
+          <Text style={{ fontSize: 13, color: TEXT_SUB, fontWeight: "600" }}>
             {likesCount}
           </Text>
         </TouchableOpacity>
@@ -199,8 +213,8 @@ function PostCard({ item }) {
           style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
           activeOpacity={0.7}
         >
-          <MessageCircle size={18} color="#94A3B8" />
-          <Text style={{ fontSize: 13, color: "#64748B", fontWeight: "600" }}>
+          <MessageCircle size={18} color={TEXT_SUB} />
+          <Text style={{ fontSize: 13, color: TEXT_SUB, fontWeight: "600" }}>
             {item.comments}
           </Text>
         </TouchableOpacity>
@@ -208,13 +222,13 @@ function PostCard({ item }) {
           style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
           activeOpacity={0.7}
         >
-          <Share2 size={18} color="#94A3B8" />
-          <Text style={{ fontSize: 13, color: "#64748B", fontWeight: "600" }}>
+          <Share2 size={18} color={TEXT_SUB} />
+          <Text style={{ fontSize: 13, color: TEXT_SUB, fontWeight: "600" }}>
             Partilhar
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -222,189 +236,71 @@ function PostCard({ item }) {
 function VagaCard({ item }) {
   const router = useRouter();
   return (
-    <View style={[cardStyle, { borderLeftWidth: 4, borderLeftColor: BLUE }]}>
-      <TouchableOpacity
-        onPress={() => openPublicProfile(router, item)}
-        activeOpacity={0.8}
-        style={{
-          flexDirection: "row",
-          alignItems: "flex-start",
-          marginBottom: 10,
-        }}
-      >
-        <MabassaAvatar
-          uri={item.avatar}
-          name={item.company}
-          size={46}
-          borderRadius={12}
-        />
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              flexWrap: "wrap",
-            }}
-          >
-            <Badge label="Vaga" color={BLUE} />
-            {item.isNew && <Badge label="Nova" color={GREEN} />}
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
-            >
-              <Clock size={10} color="#94A3B8" />
-              <Text style={{ fontSize: 11, color: "#94A3B8" }}>
-                {item.postedAt}
-              </Text>
-            </View>
-          </View>
+    <TouchableOpacity onPress={() => openContentDetail(router, item)} activeOpacity={0.92} style={cardStyle}>
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+        <TouchableOpacity
+          onPress={() => openPublicProfile(router, item)}
+          activeOpacity={0.8}
+        >
+          <MabassaAvatar
+            uri={item.avatar}
+            name={item.company}
+            size={48}
+            borderRadius={24}
+          />
+        </TouchableOpacity>
+        <View style={{ flex: 1, marginLeft: 16 }}>
           <Text
             style={{
-              fontSize: 16,
+              fontSize: 17,
               fontWeight: "800",
-              color: "#0F172A",
-              marginTop: 5,
+              color: TEXT_MAIN,
+              lineHeight: 23,
             }}
+            numberOfLines={2}
           >
             {item.title}
           </Text>
-          <Text style={{ fontSize: 13, color: "#64748B", fontWeight: "600" }}>
-            {item.company}
-          </Text>
-        </View>
-      </TouchableOpacity>
-
-      <Text
-        style={{
-          fontSize: 13,
-          color: "#64748B",
-          lineHeight: 19,
-          marginBottom: 10,
-        }}
-        numberOfLines={2}
-      >
-        {item.description}
-      </Text>
-
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 10,
-          marginBottom: 14,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <MapPin size={12} color="#94A3B8" />
-          <Text style={{ fontSize: 12, color: "#64748B" }}>
-            {item.location}
-          </Text>
-        </View>
-        <View
-          style={{
-            backgroundColor: "#EFF6FF",
-            paddingHorizontal: 9,
-            paddingVertical: 3,
-            borderRadius: 20,
-          }}
-        >
-          <Text style={{ fontSize: 12, fontWeight: "600", color: BLUE }}>
-            {item.jobType}
-          </Text>
-        </View>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <Zap size={12} color={GREEN} />
-          <Text style={{ fontSize: 12, fontWeight: "700", color: GREEN }}>
-            {item.salary}
-          </Text>
+          {!!item.company && (
+            <Text style={{ fontSize: 13, color: TEXT_SUB, marginTop: 4 }} numberOfLines={1}>
+              {item.company}
+            </Text>
+          )}
         </View>
       </View>
 
-      <View style={{ flexDirection: "row", gap: 8 }}>
-        <TouchableOpacity style={[btnPrimary, { flex: 1 }]} activeOpacity={0.8}>
-          <Text style={btnPrimaryText}>Candidatar-se</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[btnSecondary, { paddingHorizontal: 14 }]}
-          activeOpacity={0.8}
-        >
-          <ChevronRight size={18} color="#334155" />
-        </TouchableOpacity>
+      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+        <Badge label="Vaga" color={PURPLE} />
+        {!!item.jobType && (
+          <View style={{ backgroundColor: PURPLE + "12", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: PURPLE }}>{item.jobType}</Text>
+          </View>
+        )}
+        {!!item.postedAt && (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Clock size={12} color={TEXT_SUB} />
+            <Text style={{ fontSize: 12, color: TEXT_SUB }}>{item.postedAt}</Text>
+          </View>
+        )}
       </View>
-    </View>
-  );
-}
 
-// ── SERVIÇO card ──────────────────────────────────────────────────
-function ServicoCard({ item }) {
-  const router = useRouter();
-  return (
-    <View style={[cardStyle, { borderLeftWidth: 4, borderLeftColor: PURPLE }]}>
-      <TouchableOpacity
-        onPress={() => openPublicProfile(router, item)}
-        activeOpacity={0.8}
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
-      >
-        <MabassaAvatar uri={item.avatar} name={item.company} size={46} />
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              flexWrap: "wrap",
-            }}
-          >
-            <Badge label="Serviço" color={PURPLE} />
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
-            >
-              <Clock size={10} color="#94A3B8" />
-              <Text style={{ fontSize: 11, color: "#94A3B8" }}>
-                {item.postedAt}
+      {(item.location || item.description) && (
+        <View style={{ marginBottom: 14 }}>
+          {!!item.location && (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: item.description ? 8 : 0 }}>
+              <MapPin size={14} color={TEXT_SUB} />
+              <Text style={{ fontSize: 13, color: TEXT_SUB }} numberOfLines={1}>
+                {item.location}
               </Text>
             </View>
-          </View>
-          <Text
-            style={{
-              fontSize: 15,
-              fontWeight: "700",
-              color: "#0F172A",
-              marginTop: 4,
-            }}
-          >
-            {item.company}
-          </Text>
+          )}
+          {!!item.description && (
+            <Text style={{ fontSize: 14, color: TEXT_SUB, lineHeight: 20 }} numberOfLines={2}>
+              {item.description}
+            </Text>
+          )}
         </View>
-        <View style={{ alignItems: "flex-end" }}>
-          <Text style={{ fontSize: 14, fontWeight: "800", color: GREEN }}>
-            {item.price}
-          </Text>
-        </View>
-      </TouchableOpacity>
-
-      <Text
-        style={{
-          fontSize: 15,
-          fontWeight: "700",
-          color: "#0F172A",
-          marginBottom: 6,
-        }}
-      >
-        {item.title}
-      </Text>
-      <Text
-        style={{
-          fontSize: 13,
-          color: "#64748B",
-          lineHeight: 19,
-          marginBottom: 12,
-        }}
-        numberOfLines={2}
-      >
-        {item.description}
-      </Text>
+      )}
 
       <View
         style={{
@@ -413,20 +309,114 @@ function ServicoCard({ item }) {
           justifyContent: "space-between",
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-          <Star size={14} color="#F59E0B" fill="#F59E0B" />
-          <Text style={{ fontSize: 13, fontWeight: "700", color: "#0F172A" }}>
-            {item.rating}
+        <View>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: RED }}>
+            {item.salary || "A negociar"}
           </Text>
-          <Text style={{ fontSize: 12, color: "#94A3B8" }}>
-            ({item.reviews} avaliações)
-          </Text>
+          <Text style={{ fontSize: 12, color: TEXT_SUB, marginTop: 4 }}>Salário</Text>
         </View>
-        <TouchableOpacity style={btnPrimary} activeOpacity={0.8}>
-          <Text style={btnPrimaryText}>Contratar</Text>
+        <TouchableOpacity
+          onPress={() => openContentDetail(router, item)}
+          style={{
+            backgroundColor: PURPLE,
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            borderRadius: 24,
+          }}
+          activeOpacity={0.8}
+        >
+          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
+            Candidatar-se
+          </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
+  );
+}
+
+// ── SERVIÇO card ──────────────────────────────────────────────────
+function ServicoCard({ item }) {
+  const router = useRouter();
+  return (
+    <TouchableOpacity onPress={() => openContentDetail(router, item)} activeOpacity={0.92} style={cardStyle}>
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+        <TouchableOpacity
+          onPress={() => openPublicProfile(router, item)}
+          activeOpacity={0.8}
+        >
+          <MabassaAvatar uri={item.avatar} name={item.company} size={48} borderRadius={24} />
+        </TouchableOpacity>
+        <View style={{ flex: 1, marginLeft: 16 }}>
+          <Text style={{ fontSize: 17, fontWeight: "800", color: TEXT_MAIN, lineHeight: 23 }} numberOfLines={2}>
+            {item.title}
+          </Text>
+          {!!item.company && (
+            <Text style={{ fontSize: 13, color: TEXT_SUB, marginTop: 4 }} numberOfLines={1}>
+              {item.company}
+            </Text>
+          )}
+        </View>
+      </View>
+
+      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+        <Badge label="Serviço" color={PURPLE} />
+        {!!item.postedAt && (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Clock size={12} color={TEXT_SUB} />
+            <Text style={{ fontSize: 12, color: TEXT_SUB }}>{item.postedAt}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Image */}
+      {item.image && (
+        <View
+          style={{
+            width: "100%",
+            height: 160,
+            borderRadius: 16,
+            overflow: "hidden",
+            marginBottom: 14,
+            backgroundColor: "#F1F5F9",
+          }}
+        >
+          <Image
+            source={{ uri: item.image }}
+            style={{ width: "100%", height: "100%" }}
+            contentFit="cover"
+          />
+        </View>
+      )}
+
+      {!!item.description && (
+        <Text style={{ fontSize: 14, color: TEXT_SUB, lineHeight: 20, marginBottom: 14 }} numberOfLines={2}>
+          {item.description}
+        </Text>
+      )}
+
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <View>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: RED }}>
+            {item.price || "A negociar"}
+          </Text>
+          <Text style={{ fontSize: 12, color: TEXT_SUB, marginTop: 4 }}>Preço</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => openContentDetail(router, item)}
+          style={{
+            backgroundColor: PURPLE,
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            borderRadius: 24,
+          }}
+          activeOpacity={0.8}
+        >
+          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
+            Contratar
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -434,56 +424,48 @@ function ServicoCard({ item }) {
 function EmpresaCard({ item }) {
   const router = useRouter();
   return (
-    <View style={[cardStyle, { borderLeftWidth: 4, borderLeftColor: GREEN }]}>
-      <TouchableOpacity
-        onPress={() => openPublicProfile(router, item)}
-        activeOpacity={0.8}
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
-      >
-        <MabassaAvatar
-          uri={item.avatar}
-          name={item.company}
-          size={46}
-          borderRadius={12}
-        />
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              flexWrap: "wrap",
-            }}
-          >
-            <Badge label="Empresa" color={GREEN} />
-            {item.isNew && <Badge label="Novo" color={BLUE} />}
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
-            >
-              <Clock size={10} color="#94A3B8" />
-              <Text style={{ fontSize: 11, color: "#94A3B8" }}>
-                {item.postedAt}
-              </Text>
-            </View>
-          </View>
+    <View style={cardStyle}>
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+        <TouchableOpacity
+          onPress={() => openPublicProfile(router, item)}
+          activeOpacity={0.8}
+        >
+          <MabassaAvatar
+            uri={item.avatar}
+            name={item.company}
+            size={48}
+            borderRadius={24}
+          />
+        </TouchableOpacity>
+        <View style={{ flex: 1, marginLeft: 16 }}>
           <Text
             style={{
-              fontSize: 15,
+              fontSize: 16,
               fontWeight: "700",
-              color: "#0F172A",
-              marginTop: 4,
+              color: TEXT_MAIN,
+              lineHeight: 22,
             }}
+            numberOfLines={2}
           >
             {item.company}
           </Text>
         </View>
-      </TouchableOpacity>
+      </View>
+
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <Text style={{ fontSize: 13, color: TEXT_SUB }}>
+          Posted in <Text style={{ fontWeight: "700", color: TEXT_MAIN }}>Empresas</Text>
+        </Text>
+        <Text style={{ fontSize: 13, color: TEXT_SUB }}>
+          {item.postedAt}
+        </Text>
+      </View>
 
       <Text
         style={{
-          fontSize: 15,
+          fontSize: 16,
           fontWeight: "700",
-          color: "#0F172A",
+          color: TEXT_MAIN,
           marginBottom: 6,
         }}
       >
@@ -491,10 +473,10 @@ function EmpresaCard({ item }) {
       </Text>
       <Text
         style={{
-          fontSize: 13,
-          color: "#64748B",
-          lineHeight: 19,
-          marginBottom: 12,
+          fontSize: 14,
+          color: TEXT_SUB,
+          lineHeight: 20,
+          marginBottom: 20,
         }}
         numberOfLines={3}
       >
@@ -513,8 +495,8 @@ function EmpresaCard({ item }) {
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
             >
-              <MapPin size={12} color="#94A3B8" />
-              <Text style={{ fontSize: 12, color: "#64748B" }}>
+              <MapPin size={14} color={TEXT_SUB} />
+              <Text style={{ fontSize: 13, color: TEXT_SUB }}>
                 {item.location}
               </Text>
             </View>
@@ -523,8 +505,8 @@ function EmpresaCard({ item }) {
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
             >
-              <Users size={12} color="#94A3B8" />
-              <Text style={{ fontSize: 12, color: "#64748B" }}>
+              <Users size={14} color={TEXT_SUB} />
+              <Text style={{ fontSize: 13, color: TEXT_SUB }}>
                 {item.employees} pessoas
               </Text>
             </View>
@@ -532,10 +514,15 @@ function EmpresaCard({ item }) {
         </View>
         <TouchableOpacity
           onPress={() => openPublicProfile(router, item)}
-          style={btnSecondary}
+          style={{
+            backgroundColor: PURPLE,
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            borderRadius: 24,
+          }}
           activeOpacity={0.8}
         >
-          <Text style={{ fontSize: 13, fontWeight: "700", color: "#334155" }}>
+          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
             Ver Perfil
           </Text>
         </TouchableOpacity>
@@ -547,33 +534,33 @@ function EmpresaCard({ item }) {
 // ── Shared styles ─────────────────────────────────────────────────
 const cardStyle = {
   backgroundColor: CARD,
-  borderRadius: 18,
-  padding: 16,
-  marginBottom: 14,
-  shadowColor: "#0F172A",
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.07,
-  shadowRadius: 10,
+  borderRadius: 24,
+  padding: 24,
+  marginBottom: 16,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.05,
+  shadowRadius: 12,
   elevation: 3,
 };
 const btnPrimary = {
-  backgroundColor: BLUE,
-  paddingVertical: 10,
-  paddingHorizontal: 18,
-  borderRadius: 12,
+  backgroundColor: PURPLE,
+  paddingVertical: 12,
+  paddingHorizontal: 24,
+  borderRadius: 24,
   alignItems: "center",
   justifyContent: "center",
 };
 const btnPrimaryText = { color: "#fff", fontWeight: "700", fontSize: 13 };
 const btnSecondary = {
-  paddingVertical: 9,
-  paddingHorizontal: 14,
-  borderRadius: 12,
+  paddingVertical: 12,
+  paddingHorizontal: 24,
+  borderRadius: 24,
   alignItems: "center",
   justifyContent: "center",
-  backgroundColor: "#F1F5F9",
+  backgroundColor: CARD,
   borderWidth: 1,
-  borderColor: "#E2E8F0",
+  borderColor: BORDER,
 };
 
 // ── Render by type ────────────────────────────────────────────────
@@ -588,13 +575,14 @@ function FeedCard({ item }) {
 const TYPE_MAP = {
   Posts: "post",
   Vagas: "vaga",
-  Servicos: "servico",
+  Serviços: "servico",
   Empresas: "empresa",
 };
 
 // ── Main screen ───────────────────────────────────────────────────
 export default function FeedScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [searchText, setSearchText] = useState("");
   const [activeFilter, setActiveFilter] = useState("Todos");
   const {
@@ -604,6 +592,8 @@ export default function FeedScreen() {
   } = useQuery({
     queryKey: ["feed"],
     queryFn: () => mabassaApi.getFeed(),
+    staleTime: 0,
+    refetchOnMount: "always",
     onError: (queryError) => logError("feed-query", queryError),
   });
 
@@ -621,184 +611,132 @@ export default function FeedScreen() {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG, paddingTop: insets.top }}>
-      {/* ── Header ── */}
+    <View style={{ flex: 1, backgroundColor: BG }}>
+      {/* Header fixo apenas com logo e notificações */}
       <View
         style={{
-          paddingHorizontal: 16,
-          paddingTop: 12,
-          paddingBottom: 10,
-          backgroundColor: BG,
+          backgroundColor: CARD,
+          paddingTop: insets.top + 12,
+          paddingHorizontal: 20,
+          paddingBottom: 14,
+          borderBottomWidth: 1,
+          borderBottomColor: BORDER,
         }}
       >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 14,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <View
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 10,
-                backgroundColor: BLUE,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Briefcase size={17} color="#fff" strokeWidth={2.5} />
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: PURPLE, alignItems: "center", justifyContent: "center" }}>
+              <Briefcase size={20} color="#fff" />
             </View>
-            <Text
-              style={{
-                fontSize: 22,
-                fontWeight: "900",
-                color: "#0F172A",
-                letterSpacing: -0.5,
-              }}
-            >
-              Mabassa
-            </Text>
+            <View>
+              <Text style={{ fontSize: 12, color: TEXT_SUB, fontWeight: "600" }}>Mabassa</Text>
+              <Text style={{ fontSize: 20, color: TEXT_MAIN, fontWeight: "900", marginTop: 2 }}>
+                Explorar
+              </Text>
+            </View>
           </View>
           <TouchableOpacity
             onPress={() => router.push("/notifications")}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: CARD,
-              alignItems: "center",
-              justifyContent: "center",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.06,
-              shadowRadius: 4,
-              elevation: 2,
-            }}
+            activeOpacity={0.8}
+            style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: BG, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: BORDER }}
           >
-            <Bell size={20} color="#0F172A" strokeWidth={2} />
-            <View
-              style={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: "#EF4444",
-                borderWidth: 1.5,
-                borderColor: "#fff",
-              }}
-            />
+            <Bell size={20} color={TEXT_MAIN} />
+            <View style={{ position: "absolute", top: 10, right: 12, width: 8, height: 8, borderRadius: 4, backgroundColor: RED }} />
           </TouchableOpacity>
-        </View>
-
-        {/* Search bar */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: CARD,
-            borderRadius: 14,
-            paddingHorizontal: 14,
-            paddingVertical: 11,
-            borderWidth: 1,
-            borderColor: "#E2E8F0",
-            gap: 10,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.04,
-            shadowRadius: 4,
-            elevation: 1,
-          }}
-        >
-          <Search size={17} color="#94A3B8" />
-          <TextInput
-            value={searchText}
-            onChangeText={setSearchText}
-            placeholder="Pesquisar no feed..."
-            placeholderTextColor="#94A3B8"
-            style={{ flex: 1, fontSize: 14, color: "#0F172A" }}
-          />
         </View>
       </View>
 
-      {/* ── Filter pills ── */}
-      <ScrollView
-        horizontal
-        keyboardShouldPersistTaps="handled"
-        showsHorizontalScrollIndicator={false}
-        style={{ flexGrow: 0, flexShrink: 0, height: 64, minHeight: 64, maxHeight: 64 }}
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingTop: 10,
-          paddingBottom: 14,
-          alignItems: "center",
-          minHeight: 64,
-        }}
-      >
-        {feedTypes.map((t) => (
-          <FilterPill
-            key={t}
-            label={t}
-            active={activeFilter === t}
-            onPress={() => setActiveFilter(t)}
-          />
-        ))}
-      </ScrollView>
-
-      {/* ── Feed list ── */}
+      {/* ── Feed list com busca e filtros dentro do scroll ── */}
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          paddingHorizontal: 16,
           paddingBottom: insets.bottom + 88,
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Count label */}
-        <Text
-          style={{
-            fontSize: 12,
-            fontWeight: "600",
-            color: "#94A3B8",
-            marginBottom: 12,
+        {/* Barra de busca - agora dentro do scroll */}
+        <View style={{ paddingHorizontal: 20, marginTop: 14 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#FFFFFF", borderRadius: 18, borderWidth: 1, borderColor: BORDER, paddingHorizontal: 14, minHeight: 52, gap: 10 }}>
+            <Search size={18} color={TEXT_SUB} />
+            <TextInput
+              value={searchText}
+              onChangeText={setSearchText}
+              placeholder="Pesquisar vagas, posts e serviços..."
+              placeholderTextColor={TEXT_SUB}
+              style={{ flex: 1, fontSize: 15, color: TEXT_MAIN, fontWeight: "500" }}
+            />
+            {!!searchText && (
+              <TouchableOpacity
+                onPress={() => setSearchText("")}
+                activeOpacity={0.7}
+                style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#E2E8F0", alignItems: "center", justifyContent: "center" }}
+              >
+                <X size={16} color="#475569" strokeWidth={2.5} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Filtros (categorias) - agora dentro do scroll */}
+        <ScrollView
+          horizontal
+          keyboardShouldPersistTaps="handled"
+          showsHorizontalScrollIndicator={false}
+          style={{ flexGrow: 0, flexShrink: 0, height: 60, minHeight: 60, maxHeight: 60, backgroundColor: BG }}
+          contentContainerStyle={{
+            paddingHorizontal: 24,
+            paddingTop: 10,
+            paddingBottom: 10,
+            alignItems: "center",
+            minHeight: 60,
+            gap: 8,
           }}
         >
-          {filtered.length} publicaç{filtered.length !== 1 ? "ões" : "ão"}
-        </Text>
+          {feedTypes.map((t) => (
+            <FilterPill
+              key={t}
+              label={t}
+              active={activeFilter === t}
+              onPress={() => setActiveFilter(t)}
+            />
+          ))}
+        </ScrollView>
 
-        {loading
-          ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
-          : filtered.map((item) => <FeedCard key={item.id} item={item} />)}
+        <View style={{ paddingHorizontal: 20, paddingTop: 0, paddingBottom: 10 }}>
+          <Text style={{ fontSize: 16, fontWeight: "800", color: TEXT_MAIN }}>Resultados</Text>
+          <Text style={{ fontSize: 13, color: TEXT_SUB, marginTop: 2 }}>{filtered.length} item{filtered.length !== 1 ? "s" : ""}</Text>
+        </View>
 
-        {!loading && error && (
-          <View style={{ alignItems: "center", paddingTop: 60, gap: 12 }}>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#94A3B8" }}>
-              Nao foi possivel carregar o feed
-            </Text>
-            <Text style={{ fontSize: 13, color: "#CBD5E1", textAlign: "center" }}>
-              Veja o console do Expo para detalhes.
-            </Text>
-          </View>
-        )}
+        <View style={{ paddingHorizontal: 20 }}>
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+            : filtered.map((item) => <FeedCard key={item.id} item={item} />)}
 
-        {!loading && !error && filtered.length === 0 && (
-          <View style={{ alignItems: "center", paddingTop: 60, gap: 12 }}>
-            <Search size={48} color="#CBD5E1" />
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#94A3B8" }}>
-              Nenhum resultado
-            </Text>
-            <Text
-              style={{ fontSize: 13, color: "#CBD5E1", textAlign: "center" }}
-            >
-              Tenta outro filtro ou pesquisa
-            </Text>
-          </View>
-        )}
+          {!loading && error && (
+            <View style={{ alignItems: "center", paddingTop: 60, gap: 12 }}>
+              <Text style={{ fontSize: 16, fontWeight: "700", color: "#94A3B8" }}>
+                Nao foi possivel carregar o feed
+              </Text>
+              <Text style={{ fontSize: 13, color: "#CBD5E1", textAlign: "center" }}>
+                Veja o console do Expo para detalhes.
+              </Text>
+            </View>
+          )}
+
+          {!loading && !error && filtered.length === 0 && (
+            <View style={{ alignItems: "center", paddingTop: 60, gap: 12 }}>
+              <Search size={48} color="#CBD5E1" />
+              <Text style={{ fontSize: 16, fontWeight: "700", color: "#94A3B8" }}>
+                Nenhum resultado
+              </Text>
+              <Text
+                style={{ fontSize: 13, color: "#CBD5E1", textAlign: "center" }}
+              >
+                Tenta outro filtro ou pesquisa
+              </Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
     </View>
   );

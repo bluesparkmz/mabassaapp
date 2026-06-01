@@ -43,10 +43,14 @@ export default function RootLayout() {
           <Stack.Screen name="create-post" options={{ headerShown: false }} />
           <Stack.Screen name="create-service" options={{ headerShown: false }} />
           <Stack.Screen name="create-job" options={{ headerShown: false }} />
+          <Stack.Screen name="content-detail" options={{ headerShown: false }} />
           <Stack.Screen name="become-company" options={{ headerShown: false }} />
           <Stack.Screen name="become-freelancer" options={{ headerShown: false }} />
           <Stack.Screen name="public-profile" options={{ headerShown: false }} />
           <Stack.Screen name="notifications" options={{ headerShown: false }} />
+          <Stack.Screen name="privacy-policy" options={{ headerShown: false }} />
+          <Stack.Screen name="settings" options={{ headerShown: false }} />
+          <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
         </Stack>
       </GestureHandlerRootView>
     </QueryClientProvider>

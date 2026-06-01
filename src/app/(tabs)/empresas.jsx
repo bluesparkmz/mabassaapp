@@ -15,9 +15,13 @@ import FilterChips from "@/components/FilterChips";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
 
-const BLUE = "#2563EB";
-const GREEN = "#10B981";
-const BG = "#F8FAFC";
+const PURPLE = "#6C5DD3";
+const RED = "#FF5656";
+const TEXT_MAIN = "#11142D";
+const TEXT_SUB = "#808191";
+const BG = "#F8F9FA";
+const CARD = "#FFFFFF";
+const BORDER = "#E2E8F0";
 const categorias = [
   "Todos",
   "Tecnologia",
@@ -40,28 +44,28 @@ function EmpresaCard({ empresa }) {
       onPress={openProfile}
       activeOpacity={0.92}
       style={{
-        backgroundColor: "#FFFFFF",
-        borderRadius: 18,
-        padding: 16,
-        marginBottom: 14,
-        shadowColor: "#0F172A",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.08,
-        shadowRadius: 10,
+        backgroundColor: CARD,
+        borderRadius: 24,
+        padding: 24,
+        marginBottom: 16,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
         elevation: 3,
       }}
     >
       <View
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
       >
         <MabassaAvatar
           uri={empresa.logo}
           name={empresa.name}
-          size={52}
-          borderRadius={14}
+          size={56}
+          borderRadius={28}
         />
-        <View style={{ flex: 1, marginLeft: 14 }}>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: "#0F172A" }}>
+        <View style={{ flex: 1, marginLeft: 16 }}>
+          <Text style={{ fontSize: 18, fontWeight: "700", color: TEXT_MAIN }}>
             {empresa.name}
           </Text>
           <View
@@ -69,18 +73,18 @@ function EmpresaCard({ empresa }) {
               flexDirection: "row",
               alignItems: "center",
               gap: 6,
-              marginTop: 3,
+              marginTop: 4,
             }}
           >
             <View
               style={{
-                backgroundColor: BLUE + "18",
-                paddingHorizontal: 8,
-                paddingVertical: 3,
+                backgroundColor: PURPLE + "18",
+                paddingHorizontal: 10,
+                paddingVertical: 4,
                 borderRadius: 20,
               }}
             >
-              <Text style={{ fontSize: 11, fontWeight: "700", color: BLUE }}>
+              <Text style={{ fontSize: 12, fontWeight: "600", color: PURPLE }}>
                 {empresa.area}
               </Text>
             </View>
@@ -90,26 +94,26 @@ function EmpresaCard({ empresa }) {
 
       <Text
         style={{
-          fontSize: 13,
-          color: "#64748B",
-          lineHeight: 18,
-          marginBottom: 12,
+          fontSize: 14,
+          color: TEXT_SUB,
+          lineHeight: 20,
+          marginBottom: 20,
         }}
         numberOfLines={2}
       >
         {empresa.description}
       </Text>
 
-      <View style={{ flexDirection: "row", gap: 16, marginBottom: 14 }}>
+      <View style={{ flexDirection: "row", gap: 16, marginBottom: 20 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <MapPin size={12} color="#94A3B8" />
-          <Text style={{ fontSize: 12, color: "#94A3B8" }}>
+          <MapPin size={14} color={TEXT_SUB} />
+          <Text style={{ fontSize: 13, color: TEXT_SUB }}>
             {empresa.location}
           </Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <Users size={12} color="#94A3B8" />
-          <Text style={{ fontSize: 12, color: "#94A3B8" }}>
+          <Users size={14} color={TEXT_SUB} />
+          <Text style={{ fontSize: 13, color: TEXT_SUB }}>
             {empresa.employees} colaboradores
           </Text>
         </View>
@@ -122,9 +126,9 @@ function EmpresaCard({ empresa }) {
           justifyContent: "space-between",
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-          <Briefcase size={13} color={GREEN} />
-          <Text style={{ fontSize: 13, fontWeight: "600", color: GREEN }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Briefcase size={16} color={PURPLE} />
+          <Text style={{ fontSize: 14, fontWeight: "600", color: PURPLE }}>
             {empresa.openJobs} vagas abertas
           </Text>
         </View>
@@ -134,17 +138,16 @@ function EmpresaCard({ empresa }) {
             flexDirection: "row",
             alignItems: "center",
             gap: 4,
-            backgroundColor: BLUE,
-            paddingHorizontal: 14,
-            paddingVertical: 9,
-            borderRadius: 11,
+            backgroundColor: PURPLE,
+            paddingHorizontal: 20,
+            paddingVertical: 12,
+            borderRadius: 24,
           }}
           activeOpacity={0.8}
         >
-          <Text style={{ color: "#fff", fontWeight: "700", fontSize: 13 }}>
+          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
             Ver perfil
           </Text>
-          <ChevronRight size={13} color="#fff" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -169,12 +172,12 @@ export default function EmpresasScreen() {
     <View style={{ flex: 1, backgroundColor: BG, paddingTop: insets.top }}>
       {/* Header */}
       <View
-        style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 }}
+        style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24 }}
       >
-        <Text style={{ fontSize: 26, fontWeight: "800", color: "#0F172A" }}>
-          Empresas
+        <Text style={{ fontSize: 32, fontWeight: "700", color: TEXT_MAIN, lineHeight: 40 }}>
+          {filtered.length}+ Empresas
         </Text>
-        <Text style={{ fontSize: 14, color: "#64748B", marginTop: 3 }}>
+        <Text style={{ fontSize: 14, color: TEXT_SUB, marginTop: 4 }}>
           Descubra empresas a contratar em Angola
         </Text>
       </View>
@@ -184,17 +187,17 @@ export default function EmpresasScreen() {
         options={categorias}
         selected={selectedCategory}
         onSelect={setSelectedCategory}
-        style={{ marginBottom: 8 }}
+        style={{ marginBottom: 16 }}
       />
 
       {/* Count */}
       <Text
         style={{
           fontSize: 13,
-          color: "#94A3B8",
+          color: TEXT_SUB,
           fontWeight: "600",
-          paddingHorizontal: 16,
-          marginBottom: 10,
+          paddingHorizontal: 24,
+          marginBottom: 16,
         }}
       >
         {filtered.length} empresa{filtered.length !== 1 ? "s" : ""} encontrada
@@ -205,7 +208,7 @@ export default function EmpresasScreen() {
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          paddingHorizontal: 16,
+          paddingHorizontal: 24,
           paddingBottom: insets.bottom + 80,
         }}
         showsVerticalScrollIndicator={false}
