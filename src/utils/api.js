@@ -1,4 +1,5 @@
 import { logError } from "@/utils/logger";
+import { displayMoney, formatMzn, formatSalaryRange, normalizeFeedItem } from "@/utils/formatMoney";
 
 export const API_URL =
   process.env.EXPO_PUBLIC_API_URL || "https://mabassaapi.up.railway.app";
@@ -120,14 +121,7 @@ const jobTypeLabels = {
 };
 
 function salaryLabel(job) {
-  if (job.salary_min && job.salary_max) {
-    return `${Number(job.salary_min).toLocaleString("pt-MZ")} - ${Number(
-      job.salary_max
-    ).toLocaleString("pt-MZ")} MZN`;
-  }
-  if (job.salary_min) return `${Number(job.salary_min).toLocaleString("pt-MZ")} MZN+`;
-  if (job.salary_max) return `Ate ${Number(job.salary_max).toLocaleString("pt-MZ")} MZN`;
-  return "A negociar";
+  return formatSalaryRange(job.salary_min, job.salary_max);
 }
 
 export function mapJob(job) {
@@ -176,7 +170,11 @@ export function mapFreelancer(profile) {
     rating: profile.rating || 0,
     reviews: profile.total_reviews || 0,
     completedJobs: profile.completed_jobs || 0,
-    price: profile.price_label || (profile.hourly_rate ? `Desde ${profile.hourly_rate} MZN` : "A negociar"),
+    price:
+      displayMoney(profile.price_label) ||
+      (profile.hourly_rate != null
+        ? formatMzn(profile.hourly_rate, { prefix: "Desde " }) + "/h"
+        : "A negociar"),
     available: profile.available,
     tags: (profile.skills || "").split(",").map((tag) => tag.trim()).filter(Boolean),
     raw: profile,
@@ -184,11 +182,12 @@ export function mapFreelancer(profile) {
 }
 
 export const mabassaApi = {
-  getFeed: (type = null) => {
+  getFeed: async (type = null) => {
     const params = new URLSearchParams();
     if (type) params.set("type", type);
     params.set("_", String(Date.now()));
-    return apiRequest(`/feed?${params.toString()}`);
+    const data = await apiRequest(`/feed?${params.toString()}`);
+    return Array.isArray(data) ? data.map(normalizeFeedItem) : data;
   },
   createPost: (payload, token = null) =>
     apiRequest("/posts", { method: "POST", body: payload }, token),

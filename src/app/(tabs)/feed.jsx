@@ -17,18 +17,19 @@ import {
   MapPin,
   Clock,
   Users,
-  DollarSign,
+  Banknote,
   Briefcase,
 } from "lucide-react-native";
 import MabassaAvatar from "@/components/MabassaAvatar";
 import SkeletonCard from "@/components/SkeletonCard";
-import HomeHeader from "@/components/HomeHeader";
+import { HomeTopBar, HomeSearchBar } from "@/components/HomeHeader";
 import FeedPromoBanner from "@/components/FeedPromoBanner";
 import FilterChips from "@/components/FilterChips";
 import ScreenFixedHeader from "@/components/ScreenFixedHeader";
 import { useUser } from "@/utils/auth/useUser";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
+import { displayMoney, salaryFromItem, priceFromItem } from "@/utils/formatMoney";
 import {
   ACCENT,
   BLACK,
@@ -291,7 +292,7 @@ function VagaCard({ item }) {
         <JobTypeBadge jobType={item.jobType} />
       </View>
 
-      <DetailRow icon={DollarSign} text={item.salary ? `${item.salary}` : null} />
+      <DetailRow icon={Banknote} text={salaryFromItem(item) || displayMoney(item.salary)} />
       <DetailRow icon={Briefcase} text={item.experience || item.category} />
       <DetailRow icon={MapPin} text={item.location} />
 
@@ -351,7 +352,7 @@ function ServicoCard({ item }) {
         />
       )}
 
-      <DetailRow icon={DollarSign} text={item.price || null} />
+      <DetailRow icon={Banknote} text={priceFromItem(item) || displayMoney(item.price)} />
       <DetailRow icon={MapPin} text={item.location} />
 
       {!!item.description && (
@@ -455,20 +456,11 @@ export default function FeedScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: BG_SOFT }}>
-      <ScreenFixedHeader insets={insets} paddingBottom={10}>
-        <HomeHeader
-          paddingTop={8}
+      <ScreenFixedHeader insets={insets} paddingBottom={0}>
+        <HomeTopBar
           userName={user?.name}
           userAvatar={user?.avatar_url}
-          searchText={searchText}
-          onSearchChange={setSearchText}
           onAvatarPress={() => router.push("/(tabs)/perfil")}
-        />
-        <FilterChips
-          options={feedTypes}
-          selected={activeFilter}
-          onSelect={setActiveFilter}
-          style={{ marginTop: 4 }}
         />
       </ScreenFixedHeader>
 
@@ -477,6 +469,15 @@ export default function FeedScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}
         showsVerticalScrollIndicator={false}
       >
+        <HomeSearchBar searchText={searchText} onSearchChange={setSearchText} />
+
+        <FilterChips
+          options={feedTypes}
+          selected={activeFilter}
+          onSelect={setActiveFilter}
+          style={{ marginTop: 8 }}
+        />
+
         <FeedPromoBanner onPress={() => setActiveFilter("Vagas")} />
 
         <View style={{ paddingHorizontal: 20, marginTop: 20, marginBottom: 12 }}>

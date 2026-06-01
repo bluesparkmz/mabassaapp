@@ -23,6 +23,7 @@ import MabassaAvatar from "@/components/MabassaAvatar";
 import { mabassaApi } from "@/utils/api";
 import { useAuth } from "@/utils/auth/useAuth";
 import { logError } from "@/utils/logger";
+import { displayMoney, formatMzn, formatSalaryRange, priceFromItem } from "@/utils/formatMoney";
 import {
   ACCENT,
   ACCENT_DARK,
@@ -61,18 +62,12 @@ function formatDate(value, fallback = "Recente") {
   });
 }
 
-function money(value) {
-  if (!value) return null;
-  return `${Number(value).toLocaleString("pt-MZ")} MZN`;
-}
-
 function salaryLabel(item) {
   if (!item) return null;
-  if (item.salary) return item.salary;
-  if (item.salary_min && item.salary_max) return `${money(item.salary_min)} - ${money(item.salary_max)}`;
-  if (item.salary_min) return `${money(item.salary_min)}+`;
-  if (item.salary_max) return `Ate ${money(item.salary_max)}`;
-  return "A negociar";
+  if (item.salary_min != null || item.salary_max != null) {
+    return formatSalaryRange(item.salary_min, item.salary_max);
+  }
+  return displayMoney(item.salary) || "A negociar";
 }
 
 function ownerProfile(type, item) {
@@ -150,7 +145,10 @@ function normalize(type, item) {
       location: item.location || [item.city, item.province].filter(Boolean).join(", ") || "Mocambique",
       postedAt: item.postedAt || formatDate(item.created_at),
       meta: [
-        item.price || (item.price ? money(item.price) : null) || freelancer?.price_label || "A negociar",
+        priceFromItem(item) ||
+          displayMoney(item.price) ||
+          displayMoney(freelancer?.price_label) ||
+          "A negociar",
         item.rating ? `${item.rating} rating` : null,
       ].filter(Boolean),
       tags: [item.category, item.owner_type].filter(Boolean),

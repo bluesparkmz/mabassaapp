@@ -513,7 +513,7 @@ export default function CreateContentScreen({ type }) {
                   <TextInput
                     value={form.price}
                     onChangeText={(value) => update("price", value)}
-                    placeholder="Preço"
+                    placeholder="Preço (MZN)"
                     placeholderTextColor={TEXT_SUB}
                     keyboardType="numeric"
                     style={inputStyle}
@@ -532,7 +532,7 @@ export default function CreateContentScreen({ type }) {
                     <TextInput
                       value={form.salary_min}
                       onChangeText={(value) => update("salary_min", value)}
-                      placeholder="Salário mín."
+                      placeholder="Salário mín. (MZN)"
                       placeholderTextColor={TEXT_SUB}
                       keyboardType="numeric"
                       style={[inputStyle, { flex: 1 }]}
@@ -540,7 +540,7 @@ export default function CreateContentScreen({ type }) {
                     <TextInput
                       value={form.salary_max}
                       onChangeText={(value) => update("salary_max", value)}
-                      placeholder="Salário máx."
+                      placeholder="Salário máx. (MZN)"
                       placeholderTextColor={TEXT_SUB}
                       keyboardType="numeric"
                       style={[inputStyle, { flex: 1 }]}

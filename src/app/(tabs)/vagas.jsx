@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Briefcase, MapPin, Clock, ChevronRight } from "lucide-react-native";
 import MabassaAvatar from "@/components/MabassaAvatar";
 import ListScreenHeader from "@/components/ListScreenHeader";
+import FilterChips from "@/components/FilterChips";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
 import {
@@ -173,40 +174,46 @@ export default function VagasScreen() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Pesquisar vagas..."
-        filterOptions={jobCategories}
-        selectedFilter={selectedCategory}
-        onFilterSelect={setSelectedCategory}
-        secondaryFilters={{
-          options: jobTypes,
-          selected: selectedType,
-          onSelect: setSelectedType,
-        }}
       />
-
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingHorizontal: 20,
-          paddingTop: 16,
-          paddingBottom: 10,
-        }}
-      >
-        <Text style={{ fontSize: 16, fontWeight: "700", color: TEXT_MAIN }}>
-          {filtered.length} vaga{filtered.length !== 1 ? "s" : ""}
-        </Text>
-        <Text style={{ fontSize: 13, color: TEXT_SUB }}>Recentes</Text>
-      </View>
 
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          paddingHorizontal: 20,
           paddingBottom: insets.bottom + 88,
         }}
         showsVerticalScrollIndicator={false}
       >
+        <FilterChips
+          options={jobCategories}
+          selected={selectedCategory}
+          onSelect={setSelectedCategory}
+          style={{ marginTop: 12 }}
+        />
+        <FilterChips
+          options={jobTypes}
+          selected={selectedType}
+          onSelect={setSelectedType}
+          showFilterIcon={false}
+          style={{ marginTop: 6 }}
+        />
+
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingTop: 16,
+            paddingBottom: 10,
+          }}
+        >
+          <Text style={{ fontSize: 16, fontWeight: "700", color: TEXT_MAIN }}>
+            {filtered.length} vaga{filtered.length !== 1 ? "s" : ""}
+          </Text>
+          <Text style={{ fontSize: 13, color: TEXT_SUB }}>Recentes</Text>
+        </View>
+
+        <View style={{ paddingHorizontal: 20 }}>
         {isLoading ? (
           Array.from({ length: 4 }).map((_, index) => (
             <View

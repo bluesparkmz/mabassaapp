@@ -12,6 +12,7 @@ import {
 } from "lucide-react-native";
 import MabassaAvatar from "@/components/MabassaAvatar";
 import ListScreenHeader from "@/components/ListScreenHeader";
+import FilterChips from "@/components/FilterChips";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
 import {
@@ -186,33 +187,37 @@ export default function EmpresasScreen() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Pesquisar empresas..."
-        filterOptions={categorias}
-        selectedFilter={selectedCategory}
-        onFilterSelect={setSelectedCategory}
       />
-
-      <Text
-        style={{
-          fontSize: 13,
-          color: TEXT_MUTED,
-          fontWeight: "600",
-          paddingHorizontal: 20,
-          paddingTop: 14,
-          paddingBottom: 10,
-        }}
-      >
-        {filtered.length} empresa{filtered.length !== 1 ? "s" : ""} encontrada
-        {filtered.length !== 1 ? "s" : ""}
-      </Text>
 
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          paddingHorizontal: 20,
           paddingBottom: insets.bottom + 88,
         }}
         showsVerticalScrollIndicator={false}
       >
+        <FilterChips
+          options={categorias}
+          selected={selectedCategory}
+          onSelect={setSelectedCategory}
+          style={{ marginTop: 12 }}
+        />
+
+        <Text
+          style={{
+            fontSize: 13,
+            color: TEXT_MUTED,
+            fontWeight: "600",
+            paddingHorizontal: 20,
+            paddingTop: 14,
+            paddingBottom: 10,
+          }}
+        >
+          {filtered.length} empresa{filtered.length !== 1 ? "s" : ""} encontrada
+          {filtered.length !== 1 ? "s" : ""}
+        </Text>
+
+        <View style={{ paddingHorizontal: 20 }}>
         {isLoading ? (
           Array.from({ length: 4 }).map((_, index) => (
             <View
@@ -243,6 +248,7 @@ export default function EmpresasScreen() {
             <EmpresaCard key={empresa.id} empresa={empresa} />
           ))
         )}
+        </View>
       </ScrollView>
     </View>
   );

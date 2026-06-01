@@ -13,8 +13,10 @@ import { Users, CheckCircle } from "lucide-react-native";
 import MabassaAvatar from "@/components/MabassaAvatar";
 import StarRating from "@/components/StarRating";
 import ListScreenHeader from "@/components/ListScreenHeader";
+import FilterChips from "@/components/FilterChips";
 import { mabassaApi } from "@/utils/api";
 import { logError } from "@/utils/logger";
+import { displayMoney } from "@/utils/formatMoney";
 import {
   ACCENT,
   ACCENT_DARK,
@@ -149,7 +151,7 @@ function FreelancerCard({ freelancer, cardWidth }) {
           marginBottom: 16,
         }}
       >
-        {freelancer.price}
+        {displayMoney(freelancer.price) || "A negociar"}
       </Text>
 
       {/* Hire button */}
@@ -217,33 +219,37 @@ export default function FreelancersScreen() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Pesquisar talentos..."
-        filterOptions={freelancerCategories}
-        selectedFilter={selectedCategory}
-        onFilterSelect={setSelectedCategory}
       />
-
-      <Text
-        style={{
-          fontSize: 13,
-          color: TEXT_MUTED,
-          fontWeight: "600",
-          paddingHorizontal: 20,
-          paddingTop: 14,
-          paddingBottom: 10,
-        }}
-      >
-        {filtered.length} profissional{filtered.length !== 1 ? "ais" : ""}{" "}
-        disponív{filtered.length !== 1 ? "eis" : "el"}
-      </Text>
 
       <ScrollView
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingHorizontal: 16,
           paddingBottom: insets.bottom + 80,
         }}
       >
+        <FilterChips
+          options={freelancerCategories}
+          selected={selectedCategory}
+          onSelect={setSelectedCategory}
+          style={{ marginTop: 12 }}
+        />
+
+        <Text
+          style={{
+            fontSize: 13,
+            color: TEXT_MUTED,
+            fontWeight: "600",
+            paddingHorizontal: 20,
+            paddingTop: 14,
+            paddingBottom: 10,
+          }}
+        >
+          {filtered.length} profissional{filtered.length !== 1 ? "ais" : ""}{" "}
+          disponív{filtered.length !== 1 ? "eis" : "el"}
+        </Text>
+
+        <View style={{ paddingHorizontal: 16 }}>
         {isLoading ? (
           <View
             style={{ flexDirection: "row", gap: GAP, alignItems: "flex-start" }}
@@ -303,6 +309,7 @@ export default function FreelancersScreen() {
             </View>
           </View>
         )}
+        </View>
       </ScrollView>
     </View>
   );

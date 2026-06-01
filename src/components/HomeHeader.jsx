@@ -3,108 +3,97 @@ import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { Bell, MessageCircle, Search, X } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import MabassaAvatar from "@/components/MabassaAvatar";
-import {
-  BG,
-  BG_SOFT,
-  BORDER,
-  TEXT_MAIN,
-  TEXT_SUB,
-  getGreeting,
-} from "@/theme";
+import { BG_SOFT, BORDER, TEXT_MAIN, TEXT_SUB, getGreeting } from "@/theme";
 
-export default function HomeHeader({
-  userName,
-  userAvatar,
-  searchText,
-  onSearchChange,
-  searchPlaceholder = "Pesquisar vagas, posts e serviços...",
-  paddingTop = 0,
-  onAvatarPress,
-}) {
+/** Barra fixa ~50px: avatar + saudação + ícones */
+export function HomeTopBar({ userName, userAvatar, onAvatarPress }) {
   const router = useRouter();
   const displayName = userName?.trim() || "visitante";
   const firstName = displayName.split(" ")[0];
 
   return (
-    <View style={{ paddingTop, paddingHorizontal: 20, paddingBottom: 4 }}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 18,
-        }}
+    <View
+      style={{
+        paddingHorizontal: 20,
+        height: 50,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      <TouchableOpacity
+        onPress={onAvatarPress}
+        activeOpacity={0.85}
+        style={{ flexDirection: "row", alignItems: "center", flex: 1, marginRight: 8 }}
+        disabled={!onAvatarPress}
       >
-        <TouchableOpacity
-          onPress={onAvatarPress}
-          activeOpacity={0.85}
-          style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
-          disabled={!onAvatarPress}
-        >
-          <MabassaAvatar
-            uri={userAvatar}
-            name={displayName}
-            size={46}
-            borderRadius={23}
-          />
-          <View style={{ marginLeft: 12, flex: 1 }}>
-            <Text style={{ fontSize: 13, color: TEXT_SUB, fontWeight: "500" }}>
-              {getGreeting()}
-            </Text>
-            <Text
-              style={{ fontSize: 20, color: TEXT_MAIN, fontWeight: "700", marginTop: 2 }}
-              numberOfLines={1}
-            >
-              {firstName}
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <TouchableOpacity
-            onPress={() => router.push("/notifications")}
-            activeOpacity={0.8}
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: 21,
-              backgroundColor: BG_SOFT,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+        <MabassaAvatar uri={userAvatar} name={displayName} size={36} borderRadius={18} />
+        <View style={{ marginLeft: 10, flex: 1 }}>
+          <Text style={{ fontSize: 11, color: TEXT_SUB, fontWeight: "500" }} numberOfLines={1}>
+            {getGreeting()}
+          </Text>
+          <Text
+            style={{ fontSize: 15, color: TEXT_MAIN, fontWeight: "700", marginTop: 1 }}
+            numberOfLines={1}
           >
-            <MessageCircle size={20} color={TEXT_MAIN} strokeWidth={2} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push("/notifications")}
-            activeOpacity={0.8}
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: 21,
-              backgroundColor: BG_SOFT,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Bell size={20} color={TEXT_MAIN} strokeWidth={2} />
-            <View
-              style={{
-                position: "absolute",
-                top: 10,
-                right: 11,
-                width: 7,
-                height: 7,
-                borderRadius: 4,
-                backgroundColor: "#EF4444",
-                borderWidth: 1.5,
-                borderColor: BG_SOFT,
-              }}
-            />
-          </TouchableOpacity>
+            {firstName}
+          </Text>
         </View>
-      </View>
+      </TouchableOpacity>
 
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+        <TouchableOpacity
+          onPress={() => router.push("/notifications")}
+          activeOpacity={0.8}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: BG_SOFT,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <MessageCircle size={18} color={TEXT_MAIN} strokeWidth={2} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push("/notifications")}
+          activeOpacity={0.8}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: BG_SOFT,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Bell size={18} color={TEXT_MAIN} strokeWidth={2} />
+          <View
+            style={{
+              position: "absolute",
+              top: 8,
+              right: 9,
+              width: 6,
+              height: 6,
+              borderRadius: 3,
+              backgroundColor: "#EF4444",
+            }}
+          />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+/** Pesquisa — rola com o conteúdo */
+export function HomeSearchBar({
+  searchText,
+  onSearchChange,
+  searchPlaceholder = "Pesquisar vagas, posts e serviços...",
+}) {
+  return (
+    <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 }}>
       <View
         style={{
           flexDirection: "row",
@@ -112,7 +101,7 @@ export default function HomeHeader({
           backgroundColor: BG_SOFT,
           borderRadius: 28,
           paddingHorizontal: 18,
-          minHeight: 52,
+          minHeight: 48,
           borderWidth: 1,
           borderColor: BORDER,
         }}
@@ -122,14 +111,15 @@ export default function HomeHeader({
           onChangeText={onSearchChange}
           placeholder={searchPlaceholder}
           placeholderTextColor={TEXT_SUB}
-          style={{ flex: 1, fontSize: 15, color: TEXT_MAIN, fontWeight: "400", paddingVertical: 14 }}
+          style={{
+            flex: 1,
+            fontSize: 15,
+            color: TEXT_MAIN,
+            paddingVertical: 12,
+          }}
         />
         {searchText ? (
-          <TouchableOpacity
-            onPress={() => onSearchChange("")}
-            activeOpacity={0.7}
-            style={{ marginRight: 4 }}
-          >
+          <TouchableOpacity onPress={() => onSearchChange("")} activeOpacity={0.7}>
             <X size={18} color={TEXT_SUB} />
           </TouchableOpacity>
         ) : (

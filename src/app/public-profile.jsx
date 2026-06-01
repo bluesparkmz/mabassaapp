@@ -65,7 +65,10 @@ function normalizeProfile(kind, data) {
       location: [data.user?.city, data.user?.province].filter(Boolean).join(", ") || "Mocambique",
       about: data.bio || "Freelancer cadastrado no Mabassa.",
       icon: UserRound,
-      tags: [data.category, data.skills, data.price_label || (data.hourly_rate ? `${data.hourly_rate} MZN/h` : null)].filter(Boolean),
+      tags: [data.category, data.skills, data.price_label ||
+        (data.hourly_rate != null
+          ? `${Number(data.hourly_rate).toLocaleString("pt-MZ")} MZN/h`
+          : null)].filter(Boolean),
       stats: [
         { value: data.completed_jobs || 0, label: "Trabalhos" },
         { value: data.rating || 0, label: "Rating" },
